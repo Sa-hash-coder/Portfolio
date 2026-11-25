@@ -73,36 +73,6 @@ export default function ContactSection({ onBackToTop }: ContactSectionProps) {
               </div>
             </div>
 
-            {/* Phone Card */}
-            <div className="p-6 sm:p-8 rounded-2xl bg-[#E9E4DC]/60 border border-[#151412]/15 hover:border-[#151412]/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#151412]/50 block mb-1">
-                  Direct Telephone
-                </span>
-                <a
-                  href="tel:+919410337297"
-                  className="font-mono text-base sm:text-lg md:text-xl text-[#151412] font-semibold hover:underline"
-                >
-                  +91 9410337297
-                </a>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleCopy("+919410337297", "phone")}
-                  className="px-3.5 py-1.5 border border-[#151412]/20 hover:border-[#151412] bg-[#151412] text-[#EEEAE3] rounded-full text-xs font-mono uppercase tracking-wider transition-all cursor-pointer active:scale-95"
-                >
-                  {copiedField === "phone" ? "Copied! ✓" : "Copy Phone"}
-                </button>
-                <a
-                  href="tel:+919410337297"
-                  className="px-3.5 py-1.5 border border-[#151412]/20 hover:border-[#151412] hover:bg-[#151412]/5 rounded-full text-xs font-mono uppercase tracking-wider transition-all"
-                >
-                  Call ↗
-                </a>
-              </div>
-            </div>
-
             {/* Location Card */}
             <div className="p-5 sm:p-6 rounded-2xl bg-[#E9E4DC]/40 border border-[#151412]/10 flex items-center justify-between text-xs font-mono text-[#151412]/70">
               <div className="flex items-center gap-2.5">

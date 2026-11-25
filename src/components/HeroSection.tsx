@@ -91,13 +91,6 @@ export default function HeroSection({ robotRef, isLoaded = false, onNavigate, on
             >
               saurabhtewari377@gmail.com
             </a>
-            <span className="hidden sm:inline text-[#151412]/30">·</span>
-            <a 
-              href="tel:+919410337297" 
-              className="hidden sm:inline hover:text-[#151412] hover:underline transition-colors"
-            >
-              +91 9410337297
-            </a>
           </div>
         </div>
       </div>
