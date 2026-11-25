@@ -1,5 +1,9 @@
-import React from "react"
+import { useEffect, useRef, useState } from "react"
+import gsap from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
 import BookshelfCoverFlip from "./BookshelfCoverFlip"
+
+gsap.registerPlugin(ScrollTrigger)
 
 interface Certificate {
   title: string
@@ -90,7 +94,8 @@ const CERTIFICATES: Certificate[] = [
 ]
 
 export default function CertificatesSection() {
-  const [selectedCert, setSelectedCert] = React.useState<Certificate | null>(null)
+  const pinContainerRef = useRef<HTMLDivElement>(null)
+  const [activeBookIndex, setActiveBookIndex] = useState(0)
 
   // Map to the bookshelf book format expected by BookshelfCoverFlip
   const shelfBooks = CERTIFICATES.map((cert) => ({
@@ -104,172 +109,250 @@ export default function CertificatesSection() {
     artVariant: cert.artVariant,
   }))
 
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      ScrollTrigger.create({
+        trigger: pinContainerRef.current,
+        start: "top top",
+        end: "+=2200",
+        pin: true,
+        scrub: 0.3,
+        onUpdate: (self) => {
+          const p = self.progress
+          // 5 books: 0, 1, 2, 3, 4
+          const idx = Math.min(
+            CERTIFICATES.length - 1,
+            Math.max(0, Math.floor(p * CERTIFICATES.length))
+          )
+          setActiveBookIndex(idx)
+        },
+      })
+    }, pinContainerRef)
+
+    return () => ctx.revert()
+  }, [])
+
+  const currentCert = CERTIFICATES[activeBookIndex] || CERTIFICATES[0]
+
   return (
-    <section className="relative min-h-screen py-14 sm:py-20 px-4 sm:px-8 md:px-12 lg:px-16 bg-[#EEEAE3] border-t border-[#151412]/15 overflow-hidden">
-      {/* ── Section Header ── */}
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 border-b border-[#151412]/15 pb-6 sm:pb-8">
-          <div>
-            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-              <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#151412]/50">
-                [04] Certified Distinctions
-              </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#151412]/30" />
-              <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#151412]/60">
-                Accredited Library
-              </span>
-            </div>
-            <h2 className="font-['Instrument_Serif'] text-3xl sm:text-5xl md:text-6xl text-[#151412] tracking-tight leading-[1.05]">
-              Certificates &amp; Specializations
-            </h2>
-          </div>
-          <p className="max-w-md text-xs sm:text-sm text-[#151412]/70 leading-relaxed font-light">
-            A three-dimensional curated archive of verified technical accreditations. Tap or hover over any volume to open its cover, or browse the edition ledger below.
-          </p>
-        </div>
-
-        {/* ── 3D Interactive Bookshelf Stage ── */}
-        <div className="relative mt-6 sm:mt-8 bg-[#E9E4DC]/50 rounded-2xl border border-[#151412]/10 overflow-hidden shadow-[inset_0_2px_12px_rgba(21,20,18,0.04)]">
-          {/* Subtle Stage Top Badge */}
-          <div className="absolute top-3 sm:top-4 left-3 sm:left-6 z-10 flex items-center gap-2 pointer-events-none">
-            <span className="w-2 h-2 rounded-full bg-[#151412]/40 animate-pulse" />
-            <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#151412]/50">
-              3D Bookshelf · Tap / Auto-Cycles
-            </span>
-          </div>
-
-          <div className="absolute top-3 sm:top-4 right-3 sm:right-6 z-10 hidden sm:flex items-center gap-2 pointer-events-none">
-            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#151412]/40">
-              Hover to Flip Cover · 5 Editions
-            </span>
-          </div>
-
-          {/* Bookshelf Component */}
-          <div className="w-full h-[380px] sm:h-[460px] md:h-[520px]">
-            <BookshelfCoverFlip
-              books={shelfBooks}
-              size={420}
-              spineWidth={14}
-              speed={48}
-              background="transparent"
-              advanced={{
-                floorColor: "#151412",
-                floorOpacity: 16,
-                gap: 3,
-                hover: 55,
-                openMs: 540,
-                closeMs: 650,
-                holdMs: 2800,
-                idleMs: 2600,
-                autoPlay: true,
-                shadowOpacity: 50,
-              }}
-            />
-          </div>
-
-          {/* Bookshelf Base Trim */}
-          <div className="px-4 sm:px-6 py-2.5 sm:py-3 border-t border-[#151412]/10 flex flex-wrap items-center justify-between text-[10px] sm:text-[11px] font-mono text-[#151412]/60 bg-[#EEEAE3]/80 gap-2">
-            <div className="flex items-center gap-2 sm:gap-4">
-              <span>✦ 5 Volumes Verified</span>
-              <span className="hidden sm:inline text-[#151412]/30">|</span>
-              <span className="hidden sm:inline">Bennett University CSE Track</span>
-            </div>
-            <div className="text-[#151412]/50 text-[10px] sm:text-[11px]">
-              Tap any spine to inspect volume
-            </div>
-          </div>
-        </div>
-
-        {/* ── Certificate Ledger Cards ── */}
-        <div className="mt-10 sm:mt-14">
-          <div className="flex items-center justify-between border-b border-[#151412]/15 pb-3 mb-6">
-            <h3 className="font-['Instrument_Serif'] text-xl sm:text-2xl text-[#151412] italic">
-              Verification Ledger &amp; Core Competencies
-            </h3>
-            <span className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-[#151412]/40">
-              5 of 5 Accredited
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-            {CERTIFICATES.map((cert, idx) => (
-              <div
-                key={cert.credentialId}
-                onClick={() => setSelectedCert(selectedCert?.credentialId === cert.credentialId ? null : cert)}
-                className="group p-5 sm:p-6 bg-[#EEEAE3] hover:bg-[#E9E4DC] border border-[#151412]/15 hover:border-[#151412]/40 rounded-xl transition-all duration-300 flex flex-col justify-between cursor-pointer"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3 sm:mb-4">
-                    <span 
-                      className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded text-[9px] sm:text-[10px] font-mono uppercase tracking-wider font-semibold border"
-                      style={{ 
-                        backgroundColor: `${cert.coverColor}15`, 
-                        borderColor: `${cert.coverColor}30`,
-                        color: cert.coverColor 
-                      }}
-                    >
-                      {cert.label}
-                    </span>
-                    <span className="text-[11px] sm:text-xs font-mono text-[#151412]/40">
-                      0{idx + 1} / {cert.issueDate}
-                    </span>
-                  </div>
-
-                  <h4 className="font-['Instrument_Serif'] text-xl sm:text-2xl text-[#151412] leading-snug group-hover:underline decoration-1 underline-offset-4">
-                    {cert.title}
-                  </h4>
-                  <p className="mt-1 text-[11px] sm:text-xs text-[#151412]/70 font-mono">
-                    {cert.subtitle}
-                  </p>
-                </div>
-
-                <div className="mt-5 sm:mt-6 pt-3 sm:pt-4 border-t border-[#151412]/10">
-                  <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-2.5 sm:mb-3">
-                    {cert.skills.map((skill) => (
-                      <span
-                        key={skill}
-                        className="px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded bg-[#151412]/5 text-[9px] sm:text-[10px] text-[#151412]/75 font-mono"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-mono text-[#151412]/50">
-                    <span>ID: {cert.credentialId}</span>
-                    <span className="text-emerald-700 font-medium flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block" />
-                      Verified
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {/* Academic Standing Summary Card */}
-            <div className="p-5 sm:p-6 bg-[#151412] text-[#EEEAE3] rounded-xl flex flex-col justify-between border border-[#151412]">
-              <div>
-                <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#EEEAE3]/60 block mb-2">
-                  Cumulative Rigor
+    <div className="relative bg-[#EEEAE3] border-t border-[#151412]/15">
+      {/* ── Pinned Scroll Stage (Each book opens progressively as you scroll) ── */}
+      <div 
+        ref={pinContainerRef}
+        className="relative h-screen max-h-screen flex flex-col justify-between py-6 sm:py-8 px-4 sm:px-8 md:px-12 lg:px-16 overflow-hidden bg-[#EEEAE3]"
+      >
+        {/* Top Header Bar */}
+        <div className="max-w-7xl mx-auto w-full">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-[#151412]/15 pb-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-[#151412]/50">
+                  [04] Certified Distinctions
                 </span>
-                <h4 className="font-['Instrument_Serif'] text-2xl sm:text-3xl italic text-[#EEEAE3] leading-tight">
-                  Academic &amp; Practical Synchrony
+                <span className="w-1.5 h-1.5 rounded-full bg-[#151412]/30" />
+                <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.18em] text-[#151412]/70">
+                  Scroll-Driven 3D Shelf
+                </span>
+              </div>
+              <h2 className="font-['Instrument_Serif'] text-3xl sm:text-4xl md:text-5xl text-[#151412] tracking-tight leading-none">
+                Certificates &amp; Specializations
+              </h2>
+            </div>
+
+            {/* Scroll Indicator & Progress Segment */}
+            <div className="flex flex-col sm:items-end gap-1.5">
+              <div className="flex items-center gap-2 text-[10px] sm:text-[11px] font-mono text-[#151412]/70">
+                <span className="animate-pulse">↓</span>
+                <span className="uppercase tracking-widest font-semibold">
+                  Scroll to view each book ({activeBookIndex + 1}/5)
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {CERTIFICATES.map((c, i) => (
+                  <div
+                    key={c.credentialId}
+                    className={`h-1.5 transition-all duration-300 rounded-full ${
+                      i === activeBookIndex
+                        ? "w-8 bg-[#151412]"
+                        : "w-2 bg-[#151412]/20"
+                    }`}
+                    title={c.title}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 3D Bookshelf Viewport (Driven by activeBook prop from scroll) */}
+        <div className="my-auto w-full max-w-7xl mx-auto">
+          <div className="relative bg-[#E9E4DC]/50 rounded-2xl border border-[#151412]/10 overflow-hidden shadow-[inset_0_2px_12px_rgba(21,20,18,0.04)]">
+            {/* Top Stage Tag */}
+            <div className="absolute top-3 left-4 sm:left-6 z-10 flex items-center gap-2 pointer-events-none">
+              <span 
+                className="w-2 h-2 rounded-full transition-colors duration-300" 
+                style={{ backgroundColor: currentCert.coverColor }}
+              />
+              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#151412]/60 truncate max-w-[280px] sm:max-w-none">
+                Volume 0{activeBookIndex + 1}: {currentCert.title}
+              </span>
+            </div>
+
+            {/* Bookshelf Component (Zero timing, scroll driven) */}
+            <div className="w-full h-[320px] sm:h-[380px] md:h-[440px]">
+              <BookshelfCoverFlip
+                books={shelfBooks}
+                activeBook={activeBookIndex}
+                disablePointer={true}
+                size={400}
+                spineWidth={14}
+                speed={65}
+                background="transparent"
+                advanced={{
+                  floorColor: "#151412",
+                  floorOpacity: 16,
+                  gap: 3,
+                  hover: 50,
+                  openMs: 480,
+                  closeMs: 580,
+                  autoPlay: false,
+                  shadowOpacity: 50,
+                }}
+              />
+            </div>
+
+            {/* Bottom Trim Bar with Active Certificate Metadata */}
+            <div className="px-4 sm:px-6 py-2.5 sm:py-3 border-t border-[#151412]/10 flex flex-wrap items-center justify-between text-[10px] sm:text-[11px] font-mono text-[#151412]/70 bg-[#EEEAE3]/90 gap-2">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span 
+                  className="px-2 py-0.5 rounded text-[9px] font-mono font-semibold uppercase tracking-wider"
+                  style={{
+                    backgroundColor: `${currentCert.coverColor}18`,
+                    color: currentCert.coverColor,
+                  }}
+                >
+                  {currentCert.label}
+                </span>
+                <span className="font-semibold text-[#151412] truncate max-w-[200px] sm:max-w-none">
+                  {currentCert.subtitle}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3 text-[#151412]/60">
+                <span className="hidden sm:inline">ID: {currentCert.credentialId}</span>
+                <span className="text-emerald-700 font-medium flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block" />
+                  Verified
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Pinned Status Bar */}
+        <div className="max-w-7xl mx-auto w-full pt-3 border-t border-[#151412]/15 flex flex-wrap justify-between items-center text-[10px] sm:text-xs font-mono text-[#151412]/50 gap-2">
+          <span>Continuous Scroll Archive · Bennett University</span>
+          <span>Scroll down to advance volumes or view ledger ↓</span>
+        </div>
+      </div>
+
+      {/* ── Complete Verification Ledger (Below the pinned scroll experience) ── */}
+      <div className="max-w-7xl mx-auto py-16 px-4 sm:px-8 md:px-12 lg:px-16 border-t border-[#151412]/15">
+        <div className="flex items-center justify-between border-b border-[#151412]/15 pb-4 mb-8">
+          <div>
+            <h3 className="font-['Instrument_Serif'] text-2xl sm:text-3xl text-[#151412]">
+              Complete Accredited Ledger &amp; Competencies
+            </h3>
+            <p className="text-xs text-[#151412]/60 font-mono mt-1">
+              Full specification of verified credentials across all 5 disciplines.
+            </p>
+          </div>
+          <span className="text-xs font-mono uppercase tracking-widest text-[#151412]/40 hidden sm:inline">
+            5 of 5 Verified
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {CERTIFICATES.map((cert, idx) => (
+            <div
+              key={cert.credentialId}
+              className={`p-6 bg-[#EEEAE3] border rounded-xl transition-all duration-300 flex flex-col justify-between ${
+                idx === activeBookIndex
+                  ? "border-[#151412] shadow-md bg-[#E9E4DC]"
+                  : "border-[#151412]/15 hover:border-[#151412]/40"
+              }`}
+            >
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span 
+                    className="px-2.5 py-1 rounded text-[10px] font-mono uppercase tracking-wider font-semibold border"
+                    style={{ 
+                      backgroundColor: `${cert.coverColor}15`, 
+                      borderColor: `${cert.coverColor}30`,
+                      color: cert.coverColor 
+                    }}
+                  >
+                    {cert.label}
+                  </span>
+                  <span className="text-xs font-mono text-[#151412]/40">
+                    Volume 0{idx + 1}
+                  </span>
+                </div>
+
+                <h4 className="font-['Instrument_Serif'] text-2xl text-[#151412] leading-snug">
+                  {cert.title}
                 </h4>
-                <p className="mt-2.5 sm:mt-3 text-xs text-[#EEEAE3]/70 font-light leading-relaxed">
-                  These certifications complement the academic benchmark of a <strong>9.81 CGPA</strong> at Bennett University, grounding theoretical computer science in industry-standard frameworks.
+                <p className="mt-1 text-xs text-[#151412]/70 font-mono">
+                  {cert.subtitle}
                 </p>
               </div>
 
-              <div className="mt-5 sm:mt-6 pt-3 sm:pt-4 border-t border-[#EEEAE3]/20 flex items-center justify-between text-[11px] sm:text-xs font-mono">
-                <span className="text-[#EEEAE3]/60">Ranked Top Tier</span>
-                <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-[#EEEAE3]/10 border border-[#EEEAE3]/20 rounded text-[#EEEAE3]">
-                  B.Tech CSE · 2026
-                </span>
+              <div className="mt-6 pt-4 border-t border-[#151412]/10">
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {cert.skills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="px-2 py-0.5 rounded bg-[#151412]/5 text-[10px] text-[#151412]/75 font-mono"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] font-mono text-[#151412]/50">
+                  <span>ID: {cert.credentialId}</span>
+                  <span className="text-emerald-700 font-medium flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block" />
+                    Verified
+                  </span>
+                </div>
               </div>
+            </div>
+          ))}
+
+          {/* Academic Standing Summary Card */}
+          <div className="p-6 bg-[#151412] text-[#EEEAE3] rounded-xl flex flex-col justify-between border border-[#151412]">
+            <div>
+              <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#EEEAE3]/60 block mb-2">
+                Cumulative Rigor
+              </span>
+              <h4 className="font-['Instrument_Serif'] text-3xl italic text-[#EEEAE3] leading-tight">
+                Academic &amp; Practical Synchrony
+              </h4>
+              <p className="mt-3 text-xs text-[#EEEAE3]/70 font-light leading-relaxed">
+                These certifications complement the academic benchmark of a <strong>9.81 CGPA</strong> at Bennett University, grounding theoretical computer science in industry-standard frameworks.
+              </p>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-[#EEEAE3]/20 flex items-center justify-between text-xs font-mono">
+              <span className="text-[#EEEAE3]/60">Ranked Top Tier</span>
+              <span className="px-2.5 py-1 bg-[#EEEAE3]/10 border border-[#EEEAE3]/20 rounded text-[#EEEAE3]">
+                B.Tech CSE · 2026
+              </span>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   )
 }

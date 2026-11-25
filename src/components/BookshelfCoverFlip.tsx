@@ -22,7 +22,7 @@ const ADVANCED_DEFAULTS = {
     closeMs: 670,
     holdMs: 2600,
     idleMs: 2600,
-    autoPlay: true,
+    autoPlay: false,
     coverScale: 118,
     coverAspect: 69,
     gap: 3,
@@ -452,9 +452,10 @@ export default function BookshelfCoverFlip(props: any) {
 
     const stRef = useRef<any>(null)
     if (!stRef.current) {
+        const initActive = typeof props.activeBook === "number" ? props.activeBook : 0
         stRef.current = {
             es: [1], vel: [0], tw: [{ from: 1, to: 1, t: 0, dur: 0.5, open: true, v0: 0 }], lift: [0],
-            active: 0, autoIdx: 0, holdT: 0, idleT: 0, pointerIn: false, hovered: -1,
+            active: initActive, autoIdx: Math.max(0, initActive), holdT: 0, idleT: 0, pointerIn: false, hovered: -1,
             py: 0, ty: 0, reduce: false,
         }
     }
@@ -566,7 +567,10 @@ export default function BookshelfCoverFlip(props: any) {
                 for (let i = 0; i < count; i++) s.es[i] = i === 0 ? 1 : 0
             } else {
                 // who is open
-                if (s.pointerIn) {
+                if (typeof p.activeBook === "number") {
+                    s.active = p.activeBook >= 0 && p.activeBook < count ? p.activeBook : -1
+                    s.autoIdx = Math.max(0, s.active)
+                } else if (s.pointerIn) {
                     s.active = s.hovered
                     if (s.hovered >= 0) s.autoIdx = s.hovered
                 } else if (a.autoPlay && !s.reduce && rate > 0 && count > 1) {
@@ -669,6 +673,7 @@ export default function BookshelfCoverFlip(props: any) {
 
     // Hit test against the settled layout, so a book shifting under the pointer never hands the hover on.
     const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (propsRef.current.disablePointer || typeof propsRef.current.activeBook === "number") return
         const s = stRef.current
         const geo = geomRef.current
         const root = rootRef.current
@@ -708,6 +713,7 @@ export default function BookshelfCoverFlip(props: any) {
         }
     }
     const onPointerLeave = () => {
+        if (typeof propsRef.current.activeBook === "number") return
         const s = stRef.current
         s.pointerIn = false
         s.hovered = -1
