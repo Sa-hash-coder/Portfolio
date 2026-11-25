@@ -44,6 +44,9 @@ export default function App() {
     setIsLoaded(true)
     // Robot drops in from above right at this moment!
     robotRef.current?.triggerDrop()
+    setTimeout(() => {
+      ScrollTrigger.refresh()
+    }, 200)
   }
 
   const navigateToSection = (targetId: string) => {

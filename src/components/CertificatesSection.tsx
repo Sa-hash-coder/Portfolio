@@ -121,7 +121,6 @@ export default function CertificatesSection() {
         pin: true,
         anticipatePin: 1,
         fastScrollEnd: true,
-        scrub: isMobile ? 0.15 : 0.3,
         onUpdate: (self) => {
           const idx = Math.min(
             CERTIFICATES.length - 1,
@@ -134,6 +133,7 @@ export default function CertificatesSection() {
           }
         },
       })
+      ScrollTrigger.refresh()
     }, pinContainerRef)
 
     return () => ctx.revert()
@@ -176,12 +176,14 @@ export default function CertificatesSection() {
               </div>
               <div className="flex items-center gap-1.5">
                 {CERTIFICATES.map((c, i) => (
-                  <div
+                  <button
                     key={c.credentialId}
-                    className={`h-1.5 transition-all duration-300 rounded-full ${
+                    type="button"
+                    onClick={() => setActiveBookIndex(i)}
+                    className={`h-1.5 transition-all duration-300 rounded-full cursor-pointer ${
                       i === activeBookIndex
                         ? "w-8 bg-[#151412]"
-                        : "w-2 bg-[#151412]/20"
+                        : "w-2 bg-[#151412]/20 hover:bg-[#151412]/40"
                     }`}
                     title={c.title}
                   />
@@ -283,7 +285,8 @@ export default function CertificatesSection() {
           {CERTIFICATES.map((cert, idx) => (
             <div
               key={cert.credentialId}
-              className={`p-6 bg-[#EEEAE3] border rounded-xl transition-all duration-300 flex flex-col justify-between ${
+              onClick={() => setActiveBookIndex(idx)}
+              className={`p-6 bg-[#EEEAE3] border rounded-xl transition-all duration-300 flex flex-col justify-between cursor-pointer ${
                 idx === activeBookIndex
                   ? "border-[#151412] shadow-md bg-[#E9E4DC]"
                   : "border-[#151412]/15 hover:border-[#151412]/40"

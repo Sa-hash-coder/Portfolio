@@ -452,17 +452,39 @@ export default function BookshelfCoverFlip(props: any) {
     const stRef = useRef<any>(null)
     if (!stRef.current) {
         const initActive = typeof props.activeBook === "number" ? props.activeBook : 0
+        const es = new Array(n).fill(0)
+        const tw = new Array(n).fill(null).map((_, i) => ({
+            from: i === initActive ? 1 : 0,
+            to: i === initActive ? 1 : 0,
+            t: 0.5,
+            dur: 0.5,
+            open: i === initActive,
+            v0: 0,
+        }))
+        if (initActive >= 0 && initActive < n) {
+            es[initActive] = 1
+        }
         stRef.current = {
-            es: [1], vel: [0], tw: [{ from: 1, to: 1, t: 0, dur: 0.5, open: true, v0: 0 }], lift: [0],
-            active: initActive, autoIdx: Math.max(0, initActive), holdT: 0, idleT: 0, pointerIn: false, hovered: -1,
-            py: 0, ty: 0, reduce: false,
+            es,
+            vel: new Array(n).fill(0),
+            tw,
+            lift: new Array(n).fill(0),
+            active: initActive,
+            autoIdx: Math.max(0, initActive),
+            holdT: 0,
+            idleT: 0,
+            pointerIn: false,
+            hovered: -1,
+            py: 0,
+            ty: 0,
+            reduce: false,
         }
     }
     const st = stRef.current
     while (st.es.length < n) {
         st.es.push(0)
         st.vel.push(0)
-        st.tw.push({ from: 0, to: 0, t: 0, dur: 0.5, open: true, v0: 0 })
+        st.tw.push({ from: 0, to: 0, t: 0.5, dur: 0.5, open: false, v0: 0 })
         st.lift.push(0)
     }
     st.es.length = n
@@ -549,7 +571,7 @@ export default function BookshelfCoverFlip(props: any) {
         let visible = true
 
         const wake = () => {
-            if (!visible) return
+            visible = true
             if (!raf) {
                 last = -1
                 raf = requestAnimationFrame(tick)
@@ -661,8 +683,24 @@ export default function BookshelfCoverFlip(props: any) {
                 if (pe && pe.style.opacity !== ss.spineOpacity) pe.style.opacity = ss.spineOpacity
             }
 
-            // Sleep RAF loop when animation settles to prevent mobile GPU battery drain
-            if (settled && !a.autoPlay && !s.pointerIn && Math.abs(s.py - s.ty) < 0.005) {
+            // Check if any book is still tweening or moving toward its target
+            let isMoving = false
+            for (let i = 0; i < count; i++) {
+                const tw = s.tw[i]
+                const target = i === s.active ? 1 : 0
+                if (
+                    tw.to !== target ||
+                    tw.t < tw.dur ||
+                    Math.abs(s.es[i] - target) > FLAT_EPS ||
+                    Math.abs(s.vel[i]) > 0.001
+                ) {
+                    isMoving = true
+                    break
+                }
+            }
+
+            // Sleep RAF loop only when all tweens have settled to save GPU and battery
+            if (!isMoving && !a.autoPlay && !s.pointerIn && Math.abs(s.py - s.ty) < 0.005) {
                 raf = 0
                 return
             }
@@ -672,13 +710,16 @@ export default function BookshelfCoverFlip(props: any) {
         const root = rootRef.current
         const io =
             root && typeof IntersectionObserver !== "undefined"
-                ? new IntersectionObserver(([e]) => {
-                      visible = e.isIntersecting
-                      if (visible && !raf) {
-                          last = -1
-                          raf = requestAnimationFrame(tick)
-                      }
-                  })
+                ? new IntersectionObserver(
+                      ([e]) => {
+                          visible = e.isIntersecting
+                          if (visible && !raf) {
+                              last = -1
+                              raf = requestAnimationFrame(tick)
+                          }
+                      },
+                      { rootMargin: "300px 0px" }
+                  )
                 : null
         if (io && root) io.observe(root)
         raf = requestAnimationFrame(tick)
