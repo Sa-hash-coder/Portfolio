@@ -155,7 +155,7 @@ function rgba(c: string, a: number) {
     const [r, g, b] = parseColor(c)
     return `rgba(${r}, ${g}, ${b}, ${a})`
 }
-function lum(c: string) {
+export function lum(c: string) {
     const [r, g, b] = parseColor(c)
     return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
 }
@@ -193,7 +193,7 @@ const STARS = [
 ]
 
 // Built-in cover art, drawn when no cover image is set (or until it loads).
-function CoverArt({ variant, ink, star, bg, uid }: { variant: number; ink: string[]; star: string; bg: string; uid: string }) {
+export function CoverArt({ variant, ink, star, bg, uid }: { variant: number; ink: string[]; star: string; bg: string; uid: string }) {
     const [c1, c2, c3] = ink
     const svg = (children: React.ReactNode) => (
         <svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" style={{ display: "block", overflow: "visible" }}>

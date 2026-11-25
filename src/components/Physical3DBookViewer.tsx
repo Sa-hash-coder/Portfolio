@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { type CertificateItem } from "./BookReaderModal"
+import { CoverArt, lum } from "./BookshelfCoverFlip"
 
 interface Physical3DBookViewerProps {
   isOpen: boolean
@@ -141,48 +142,50 @@ export default function Physical3DBookViewer({
   const details = EXTENDED_DETAILS[bookIndex] || EXTENDED_DETAILS[0]
 
   // Animation Stage sequence:
-  // 0: Lifting out of the shelf in 3D (closed book pulled forward)
-  // 1: Cover swinging open (-180deg)
-  // 2: Page 1 turning over (-180deg)
-  // 3: Settle on fully opened 2-page detailed spread
-  const [animStage, setAnimStage] = useState<0 | 1 | 2 | 3>(0)
+  // 0: Lifting out of shelf (starts at shelf plane, glides up to center)
+  // 1: Center stage reached, front cover swings open (-180deg)
+  // 2: Page 1 leaf turns over (-180deg)
+  // 3: Settled onto full 2-page detailed chapter spread
+  const [stage, setStage] = useState<0 | 1 | 2 | 3>(0)
   const [activeSpreadPage, setActiveSpreadPage] = useState<1 | 2>(1)
-  const timerRefs = useRef<number[]>([])
+  const [isClosing, setIsClosing] = useState(false)
+  const timers = useRef<number[]>([])
 
-  const clearAllTimers = () => {
-    timerRefs.current.forEach((id) => window.clearTimeout(id))
-    timerRefs.current = []
+  const clearTimers = () => {
+    timers.current.forEach((t) => window.clearTimeout(t))
+    timers.current = []
   }
 
   // Orchestrate the physical book opening sequence
   useEffect(() => {
     if (!isOpen) {
-      setAnimStage(0)
+      setStage(0)
       setActiveSpreadPage(1)
-      clearAllTimers()
+      setIsClosing(false)
+      clearTimers()
       return
     }
 
-    // Step 0: Book floats forward from shelf
-    setAnimStage(0)
+    setIsClosing(false)
+    setStage(0)
     setActiveSpreadPage(1)
 
-    // Step 1: Open the hardcover cover after pulling forward
+    // Step 0 -> Step 1: Smoothly elevate book from shelf plane to center focal point
+    const t0 = window.setTimeout(() => {
+      setStage(1) // Front cover begins opening
+    }, 550)
+
+    // Step 1 -> Step 2: Cover has opened, now turn the first interior page leaf
     const t1 = window.setTimeout(() => {
-      setAnimStage(1)
-    }, 450)
+      setStage(2) // Leaf 1 begins turning
+    }, 1300)
 
-    // Step 2: Turn the first page leaf to reveal the deeper chapter spread
+    // Step 2 -> Step 3: Leaf has turned, settle on the open architectural spread
     const t2 = window.setTimeout(() => {
-      setAnimStage(2)
-    }, 1100)
+      setStage(3)
+    }, 1950)
 
-    // Step 3: Complete settling onto the detailed project spread
-    const t3 = window.setTimeout(() => {
-      setAnimStage(3)
-    }, 1750)
-
-    timerRefs.current = [t1, t2, t3]
+    timers.current = [t0, t1, t2]
 
     // Keyboard navigation
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -206,40 +209,58 @@ export default function Physical3DBookViewer({
     document.body.style.overflow = "hidden"
 
     return () => {
-      clearAllTimers()
+      clearTimers()
       window.removeEventListener("keydown", handleKeyDown)
       document.body.style.overflow = "unset"
     }
   }, [isOpen, bookIndex])
 
   const handleClose = () => {
-    // Reverse the animation: fold pages back, close cover, and slide back to shelf
-    setAnimStage(1)
+    if (isClosing) return
+    setIsClosing(true)
+    clearTimers()
+
+    // Smooth reverse sequence:
+    // 1. Fold interior leaf back
+    setStage(1)
     setTimeout(() => {
-      setAnimStage(0)
+      // 2. Swing cover shut
+      setStage(0)
       setTimeout(() => {
+        // 3. Complete glide back to shelf and unmount
         onClose()
-      }, 400)
-    }, 350)
+      }, 500)
+    }, 450)
   }
 
   if (!isOpen) return null
 
-  // Angle calculations for the 3D book components
-  const isCoverOpen = animStage >= 1
-  const isLeaf1Turned = animStage >= 2
+  // Book color and cover art settings (identical to shelf!)
+  const isLightCover = lum(currentBook.coverColor) > 0.55
+  const ink = isLightCover
+    ? ["#FBF6EA", "#A99C86", "#4A4136"]
+    : ["#D2D0CC", "#8E949D", "#2F3442"]
+  const artVariant = currentBook.artVariant ?? (bookIndex % 4)
+
+  // 3D Rotation Angles
+  const isCoverOpen = stage >= 1
+  const isLeaf1Turned = stage >= 2
   const isLeaf2Turned = activeSpreadPage === 2
 
   return (
     <div
       onClick={handleClose}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-between p-3 sm:p-6 bg-[#0E0D0C]/85 backdrop-blur-md animate-fadeIn overflow-hidden select-none"
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-between p-3 sm:p-6 transition-all duration-500 ease-out select-none ${
+        isClosing ? "bg-black/0 opacity-0 pointer-events-none" : "bg-[#0A0908]/85 backdrop-blur-md opacity-100"
+      }`}
       style={{ perspective: "2200px" }}
     >
-      {/* ── Top Bar: Navigation & Instructions ── */}
+      {/* ── Top Bar: Navigation & Status ── */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-5xl flex items-center justify-between gap-4 py-2 px-4 rounded-full bg-[#1C1A17]/90 border border-[#EEEAE3]/15 text-[#EEEAE3] shadow-lg shrink-0 z-30"
+        className={`w-full max-w-5xl flex items-center justify-between gap-4 py-2 px-4 rounded-full bg-[#1A1815]/95 border border-[#EEEAE3]/15 text-[#EEEAE3] shadow-xl shrink-0 z-30 transition-all duration-500 ${
+          stage === 0 ? "opacity-0 -translate-y-4" : "opacity-100 translate-y-0"
+        }`}
       >
         <div className="flex items-center gap-2 sm:gap-3">
           <span
@@ -251,11 +272,14 @@ export default function Physical3DBookViewer({
           </span>
         </div>
 
-        {/* Status prompt */}
-        <div className="hidden md:flex items-center gap-2 text-[11px] font-mono text-[#EEEAE3]/50">
+        <div className="hidden md:flex items-center gap-2 text-[11px] font-mono text-[#EEEAE3]/60">
           <span className="text-amber-400">✦</span>
           <span>
-            {animStage < 3 ? "Pulling volume from shelf..." : "3D Physical Folio Open"}
+            {stage === 0
+              ? "Lifting out of shelf..."
+              : stage < 3
+              ? "Opening hardcover & turning pages..."
+              : "Physical 3D Open Folio"}
           </span>
         </div>
 
@@ -278,25 +302,25 @@ export default function Physical3DBookViewer({
           <button
             type="button"
             onClick={handleClose}
-            className="px-3 py-1 rounded-full bg-[#EEEAE3]/10 hover:bg-[#EEEAE3] hover:text-[#151412] text-[10px] sm:text-[11px] font-mono uppercase tracking-wider transition-all cursor-pointer border border-[#EEEAE3]/15"
+            className="px-3.5 py-1 rounded-full bg-[#EEEAE3]/15 hover:bg-[#EEEAE3] hover:text-[#151412] text-[10px] sm:text-[11px] font-mono uppercase tracking-wider transition-all cursor-pointer border border-[#EEEAE3]/20"
           >
             Return to Shelf ✕
           </button>
         </div>
       </div>
 
-      {/* ── Center: The Physical 3D Book Stage ── */}
+      {/* ── Center: 3D Physical Book Lift-Out & Open Stage ── */}
       <div
         onClick={(e) => e.stopPropagation()}
         className="my-auto w-full flex items-center justify-center py-4 relative"
         style={{ perspective: "2200px" }}
       >
-        {/* ── 3D BOOK WRAPPER ── */}
+        {/* ── 3D BOOK ENSEMBLE ── */}
         <div
-          className={`relative transition-all duration-700 ease-out ${
-            animStage === 0
-              ? "scale-90 sm:scale-95 translate-y-8 rotate-x-[12deg] rotate-y-[-8deg]"
-              : "scale-100 translate-y-0 rotate-x-[0deg] rotate-y-[0deg]"
+          className={`relative transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            stage === 0 || isClosing
+              ? "translate-y-[150px] scale-[0.62] rotate-x-[14deg] rotate-y-[-6deg] opacity-95"
+              : "translate-y-0 scale-100 rotate-x-[0deg] rotate-y-[0deg] opacity-100"
           }`}
           style={{
             transformStyle: "preserve-3d",
@@ -304,18 +328,19 @@ export default function Physical3DBookViewer({
             height: "min(72vh, 520px)",
           }}
         >
-          {/* 3D Drop Shadow underneath the floating book */}
+          {/* 3D Realistic Contact Shadow underneath book */}
           <div
-            className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-[100%] pointer-events-none transition-opacity duration-700 blur-xl"
+            className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-[100%] pointer-events-none transition-all duration-700 blur-xl"
             style={{
-              background: "radial-gradient(ellipse at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 40%, transparent 75%)",
-              opacity: animStage > 0 ? 0.95 : 0.6,
+              background: "radial-gradient(ellipse at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.45) 45%, transparent 75%)",
+              opacity: stage > 0 && !isClosing ? 0.95 : 0.5,
+              transform: stage > 0 && !isClosing ? "scale(1.05)" : "scale(0.7)",
             }}
           />
 
-          {/* ════ LEFT HALF: Stationary Back Cover / Inside Left Spread ════ */}
+          {/* ════ LEFT HALF: Stationary Back Cover & Inside Left Spread ════ */}
           <div
-            className="absolute left-0 top-0 w-1/2 h-full rounded-l-2xl overflow-hidden border border-[#151412]/20 shadow-[inset_0_2px_15px_rgba(0,0,0,0.15),-15px_15px_35px_rgba(0,0,0,0.5)] transition-all duration-500"
+            className="absolute left-0 top-0 w-1/2 h-full rounded-l-2xl overflow-hidden border border-[#151412]/25 shadow-[inset_0_2px_15px_rgba(0,0,0,0.15),-20px_20px_45px_rgba(0,0,0,0.55)] transition-all duration-500"
             style={{
               backgroundColor: isCoverOpen ? "#F4EFE6" : currentBook.coverColor,
               transformOrigin: "right center",
@@ -323,7 +348,7 @@ export default function Physical3DBookViewer({
           >
             {isCoverOpen ? (
               /* Inside Left Folio Page Spread */
-              <div className="w-full h-full p-4 sm:p-7 md:p-9 flex flex-col justify-between text-[#151412] relative bg-gradient-to-r from-[#EDE6D8] via-[#F4EFE6] to-[#FBF8F2]">
+              <div className="w-full h-full p-4 sm:p-7 md:p-9 flex flex-col justify-between text-[#151412] relative bg-gradient-to-r from-[#ECE4D5] via-[#F4EFE6] to-[#FBF8F2]">
                 {/* Book spine crease shadow on the right edge */}
                 <div className="absolute right-0 top-0 bottom-0 w-8 pointer-events-none bg-gradient-to-l from-black/20 via-black/5 to-transparent" />
 
@@ -382,13 +407,19 @@ export default function Physical3DBookViewer({
                 </div>
               </div>
             ) : (
-              /* Back of closed book */
+              /* Back of closed book while lifting */
               <div
-                className="w-full h-full flex items-center justify-center p-6 text-center"
+                className="w-full h-full flex flex-col justify-between p-6"
                 style={{ color: currentBook.textColor }}
               >
-                <div className="font-['Instrument_Serif'] text-3xl italic opacity-30">
+                <div className="text-[10px] font-mono uppercase tracking-widest opacity-40">
+                  Saurabh Tewari · CSE Archive
+                </div>
+                <div className="my-auto text-center font-['Instrument_Serif'] text-4xl italic opacity-35">
                   {currentBook.monogram}
+                </div>
+                <div className="text-[10px] font-mono text-right opacity-40">
+                  Bennett University
                 </div>
               </div>
             )}
@@ -396,7 +427,7 @@ export default function Physical3DBookViewer({
 
           {/* ════ RIGHT HALF: Stationary Base Page / Inside Right Spread ════ */}
           <div
-            className="absolute right-0 top-0 w-1/2 h-full rounded-r-2xl overflow-hidden border border-[#151412]/20 shadow-[inset_0_2px_15px_rgba(0,0,0,0.1),15px_15px_35px_rgba(0,0,0,0.5)] bg-gradient-to-l from-[#EDE6D8] via-[#F4EFE6] to-[#FBF8F2]"
+            className="absolute right-0 top-0 w-1/2 h-full rounded-r-2xl overflow-hidden border border-[#151412]/25 shadow-[inset_0_2px_15px_rgba(0,0,0,0.1),20px_20px_45px_rgba(0,0,0,0.55)] bg-gradient-to-l from-[#ECE4D5] via-[#F4EFE6] to-[#FBF8F2]"
             style={{ transformOrigin: "left center" }}
           >
             {/* Book spine crease shadow on the left edge */}
@@ -483,7 +514,7 @@ export default function Physical3DBookViewer({
           >
             {/* Front Side of Leaf 1 (seen before turning) */}
             <div
-              className="absolute inset-0 rounded-r-2xl p-5 sm:p-8 bg-[#FBF8F1] border-r border-[#151412]/15 shadow-[-5px_0_15px_rgba(0,0,0,0.1)] flex flex-col justify-between text-[#151412]"
+              className="absolute inset-0 rounded-r-2xl p-5 sm:p-8 bg-[#FBF8F1] border-r border-[#151412]/15 shadow-[-5px_0_15px_rgba(0,0,0,0.12)] flex flex-col justify-between text-[#151412]"
               style={{
                 backfaceVisibility: "hidden",
                 WebkitBackfaceVisibility: "hidden",
@@ -507,7 +538,7 @@ export default function Physical3DBookViewer({
 
             {/* Back Side of Leaf 1 (seen after turning over to the left side) */}
             <div
-              className="absolute inset-0 rounded-l-2xl p-4 sm:p-7 bg-[#F4EFE6] border-l border-[#151412]/15 shadow-[5px_0_15px_rgba(0,0,0,0.1)] flex flex-col justify-between text-[#151412]"
+              className="absolute inset-0 rounded-l-2xl p-4 sm:p-7 bg-[#F4EFE6] border-l border-[#151412]/15 shadow-[5px_0_15px_rgba(0,0,0,0.12)] flex flex-col justify-between text-[#151412]"
               style={{
                 backfaceVisibility: "hidden",
                 WebkitBackfaceVisibility: "hidden",
@@ -561,7 +592,7 @@ export default function Physical3DBookViewer({
                 </p>
               </div>
               <div className="text-[9px] font-mono text-[#151412]/50">
-                Leaf 02 · Click 'Turn Page' to flip
+                Leaf 02 · Click 'Flip to Specs' to view
               </div>
             </div>
 
@@ -593,7 +624,7 @@ export default function Physical3DBookViewer({
             </div>
           </div>
 
-          {/* ════ HARDCOVER FRONT COVER: Swings Open in 3D ════ */}
+          {/* ════ HARDCOVER FRONT COVER: Swings Open with IDENTICAL Artwork! ════ */}
           <div
             className="absolute right-0 top-0 w-1/2 h-full transition-transform duration-700 ease-in-out cursor-pointer pointer-events-auto"
             style={{
@@ -603,9 +634,9 @@ export default function Physical3DBookViewer({
               zIndex: isCoverOpen ? 10 : 30,
             }}
           >
-            {/* ── OUTSIDE COVER (Visible when book is closed) ── */}
+            {/* ── OUTSIDE FRONT COVER: 100% IDENTICAL to the book on the shelf! ── */}
             <div
-              className="absolute inset-0 rounded-r-2xl p-5 sm:p-8 flex flex-col justify-between shadow-[15px_15px_40px_rgba(0,0,0,0.6)] border-r-2 border-t border-b border-black/20"
+              className="absolute inset-0 rounded-r-2xl overflow-hidden shadow-[20px_20px_50px_rgba(0,0,0,0.65)] border-r-2 border-t border-b border-black/30 flex flex-col justify-between"
               style={{
                 backgroundColor: currentBook.coverColor,
                 color: currentBook.textColor,
@@ -613,37 +644,56 @@ export default function Physical3DBookViewer({
                 WebkitBackfaceVisibility: "hidden",
               }}
             >
-              {/* Left spine gold embossing stripe */}
-              <div className="absolute left-0 top-0 bottom-0 w-2.5 bg-gradient-to-r from-black/40 via-amber-400/20 to-transparent pointer-events-none" />
-
-              {/* Cover Top Badges */}
-              <div className="flex items-center justify-between">
-                <span className="text-[9px] font-mono uppercase tracking-[0.25em] opacity-60">
-                  {currentBook.label}
-                </span>
-                <span className="text-[9px] font-mono opacity-50">
-                  VOL 0{bookIndex + 1}
+              {/* Left spine vertical strip with vertical title (matching shelf!) */}
+              <div
+                className="absolute left-0 top-0 bottom-0 w-8 border-r border-white/15 flex items-start justify-center pt-5 overflow-hidden"
+                style={{ backgroundColor: "rgba(0,0,0,0.25)" }}
+              >
+                <span
+                  style={{
+                    writingMode: "vertical-rl",
+                    fontFamily: "Georgia, serif",
+                    fontSize: "11px",
+                    letterSpacing: "0.05em",
+                    opacity: 0.85,
+                  }}
+                  className="whitespace-nowrap"
+                >
+                  {currentBook.title}
                 </span>
               </div>
 
-              {/* Cover Center Artwork & Title */}
-              <div className="my-auto py-4 text-center">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full border-2 border-current/25 flex items-center justify-center font-['Instrument_Serif'] text-3xl sm:text-4xl italic mb-3 opacity-90 shadow-inner">
-                  {currentBook.monogram}
+              {/* Exact CoverArt SVG (Figure with hat, Eagle, Globe, Compass, etc.) */}
+              <div className="absolute left-9 sm:left-10 right-4 top-4 sm:top-5 h-[48%] flex items-center justify-center">
+                <div className="w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] md:w-[145px] md:h-[145px]">
+                  <CoverArt
+                    variant={artVariant}
+                    ink={ink}
+                    star="#D9A55A"
+                    bg={currentBook.coverColor}
+                    uid={`reader-art-${bookIndex}`}
+                  />
                 </div>
-                <h3 className="font-['Instrument_Serif'] text-2xl sm:text-4xl leading-tight">
+              </div>
+
+              {/* Text Area (Kicker Label, Title, Subtitle matching shelf layout!) */}
+              <div className="absolute left-10 sm:left-12 right-4 bottom-5 sm:bottom-6">
+                {currentBook.label && (
+                  <div className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-medium opacity-85 mb-1.5">
+                    {currentBook.label}
+                  </div>
+                )}
+                <h3 className="font-['Instrument_Serif'] text-xl sm:text-2xl md:text-3xl leading-[1.08] text-white">
                   {currentBook.title}
                 </h3>
-                <p className="mt-1.5 text-xs font-mono opacity-75 max-w-xs mx-auto">
-                  {currentBook.subtitle}
-                </p>
+                <div className="flex items-center gap-2 mt-2 text-[10px] sm:text-[11px] font-mono opacity-80">
+                  <span className="w-4 h-[1px] bg-current inline-block" />
+                  <span className="truncate">{currentBook.subtitle}</span>
+                </div>
               </div>
 
-              {/* Cover Bottom Trim */}
-              <div className="pt-3 border-t border-current/20 flex items-center justify-between text-[10px] font-mono opacity-70">
-                <span>{currentBook.issuer}</span>
-                <span>Tap to Open Cover ↗</span>
-              </div>
+              {/* Gilded right edge accent */}
+              <div className="absolute right-0 top-0 bottom-0 w-[1px] bg-white/20" />
             </div>
 
             {/* ── INSIDE FRONT COVER (Visible after cover swings open to the left) ── */}
@@ -682,7 +732,7 @@ export default function Physical3DBookViewer({
           <div
             className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-5 pointer-events-none z-40"
             style={{
-              background: "linear-gradient(90deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.1) 60%, rgba(0,0,0,0.3) 100%)",
+              background: "linear-gradient(90deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.1) 60%, rgba(0,0,0,0.35) 100%)",
             }}
           >
             {/* Hanging Silk Ribbon Bookmark */}
@@ -696,7 +746,9 @@ export default function Physical3DBookViewer({
       {/* ── Bottom Controls: Interactive Page Turning & Volume Navigation ── */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-3xl flex flex-wrap items-center justify-between gap-3 py-2.5 px-5 rounded-2xl bg-[#1C1A17]/90 border border-[#EEEAE3]/15 text-[#EEEAE3] shadow-lg shrink-0 z-30"
+        className={`w-full max-w-3xl flex flex-wrap items-center justify-between gap-3 py-2.5 px-5 rounded-2xl bg-[#1A1815]/95 border border-[#EEEAE3]/15 text-[#EEEAE3] shadow-xl shrink-0 z-30 transition-all duration-500 ${
+          stage === 0 ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"
+        }`}
       >
         <div className="flex items-center gap-2">
           <button
