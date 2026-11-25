@@ -28,6 +28,7 @@ export default function App() {
       smoothWheel: true,
     })
     lenisRef.current = lenis
+    ;(window as unknown as { __lenis?: Lenis }).__lenis = lenis
 
     lenis.on("scroll", ScrollTrigger.update)
 
@@ -38,6 +39,7 @@ export default function App() {
     gsap.ticker.lagSmoothing(0)
 
     return () => {
+      delete (window as unknown as { __lenis?: Lenis }).__lenis
       lenis.destroy()
     }
   }, [])

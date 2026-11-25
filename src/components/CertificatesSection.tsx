@@ -102,6 +102,9 @@ const CERTIFICATES: Certificate[] = [
 
 export default function CertificatesSection() {
   const pinContainerRef = useRef<HTMLDivElement>(null)
+  const scrollTriggerRef = useRef<ScrollTrigger | null>(null)
+  const isProgrammaticScrollRef = useRef(false)
+  const programmaticTimerRef = useRef<number | null>(null)
   const [activeBookIndex, setActiveBookIndex] = useState(0)
   const [selectedBookIndex, setSelectedBookIndex] = useState(0)
   const [isReaderOpen, setIsReaderOpen] = useState(false)
@@ -110,6 +113,41 @@ export default function CertificatesSection() {
   const handleOpenReader = (index: number) => {
     setSelectedBookIndex(index)
     setIsReaderOpen(true)
+  }
+
+  const selectBookAndScroll = (index: number) => {
+    const clamped = Math.min(CERTIFICATES.length - 1, Math.max(0, index))
+    lastIndexRef.current = clamped
+    setActiveBookIndex(clamped)
+
+    const st = scrollTriggerRef.current
+    if (st) {
+      const progress = (clamped + 0.5) / CERTIFICATES.length
+      const targetY = st.start + progress * (st.end - st.start)
+
+      isProgrammaticScrollRef.current = true
+      if (programmaticTimerRef.current) {
+        window.clearTimeout(programmaticTimerRef.current)
+      }
+      programmaticTimerRef.current = window.setTimeout(() => {
+        isProgrammaticScrollRef.current = false
+      }, 850)
+
+      const lenis = (window as unknown as { __lenis?: { scrollTo: (y: number, opts?: { duration?: number }) => void } }).__lenis
+      if (lenis) {
+        lenis.scrollTo(targetY, { duration: 0.75 })
+      } else {
+        window.scrollTo({ top: targetY, behavior: "smooth" })
+      }
+    }
+  }
+
+  const handleBookClick = (index: number) => {
+    if (index !== activeBookIndex) {
+      selectBookAndScroll(index)
+    } else {
+      handleOpenReader(index)
+    }
   }
 
   // Map to the bookshelf book format expected by BookshelfCoverFlip
@@ -128,7 +166,7 @@ export default function CertificatesSection() {
     const ctx = gsap.context(() => {
       const isMobile = window.innerWidth < 768
 
-      ScrollTrigger.create({
+      scrollTriggerRef.current = ScrollTrigger.create({
         trigger: pinContainerRef.current,
         start: "top top",
         end: () => (isMobile ? "+=1100" : "+=2000"),
@@ -136,6 +174,7 @@ export default function CertificatesSection() {
         anticipatePin: 1,
         fastScrollEnd: true,
         onUpdate: (self) => {
+          if (isProgrammaticScrollRef.current) return
           const idx = Math.min(
             CERTIFICATES.length - 1,
             Math.max(0, Math.floor(self.progress * CERTIFICATES.length))
@@ -150,7 +189,13 @@ export default function CertificatesSection() {
       ScrollTrigger.refresh()
     }, pinContainerRef)
 
-    return () => ctx.revert()
+    return () => {
+      if (programmaticTimerRef.current) {
+        window.clearTimeout(programmaticTimerRef.current)
+      }
+      scrollTriggerRef.current = null
+      ctx.revert()
+    }
   }, [])
 
   const currentCert = CERTIFICATES[activeBookIndex] || CERTIFICATES[0]
@@ -193,7 +238,7 @@ export default function CertificatesSection() {
                   <button
                     key={c.credentialId}
                     type="button"
-                    onClick={() => setActiveBookIndex(i)}
+                    onClick={() => selectBookAndScroll(i)}
                     className={`h-1.5 transition-all duration-300 rounded-full cursor-pointer ${
                       i === activeBookIndex
                         ? "w-8 bg-[#151412]"
@@ -226,7 +271,7 @@ export default function CertificatesSection() {
               <BookshelfCoverFlip
                 books={shelfBooks}
                 activeBook={activeBookIndex}
-                onBookClick={handleOpenReader}
+                onBookClick={handleBookClick}
                 disablePointer={true}
                 size={380}
                 spineWidth={14}
@@ -254,7 +299,7 @@ export default function CertificatesSection() {
                 title={`Open Volume 0${activeBookIndex + 1} Interactive Folio`}
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <span className="font-medium truncate">Click book to float &amp; open reader ↗</span>
+                <span className="font-medium truncate">Click book to select · Click again to open ↗</span>
               </button>
             </div>
 
@@ -418,7 +463,7 @@ export default function CertificatesSection() {
         onClose={() => setIsReaderOpen(false)}
         onSelectBook={(idx) => {
           setSelectedBookIndex(idx)
-          setActiveBookIndex(idx)
+          selectBookAndScroll(idx)
         }}
       />
     </div>
