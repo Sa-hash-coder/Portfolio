@@ -143,6 +143,31 @@ export default function CoverflowSlideshow({
     [step]
   )
 
+  // Touch Swipe Gesture for Mobile
+  const touchStartX = useRef<number | null>(null)
+  const touchStartY = useRef<number | null>(null)
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+    touchStartY.current = e.touches[0].clientY
+  }
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return
+    const diffX = e.changedTouches[0].clientX - touchStartX.current
+    const diffY = e.changedTouches[0].clientY - (touchStartY.current ?? 0)
+    touchStartX.current = null
+    touchStartY.current = null
+
+    if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX < 0) {
+        step(1)
+      } else {
+        step(-1)
+      }
+    }
+  }
+
   const { dur, ease } = cssTransition(transition)
   const transitionCss = `transform ${dur}s ${ease}, opacity ${dur}s ${ease}`
   const dim = 1 - Math.max(0, Math.min(100, opacity)) / 100
@@ -163,14 +188,18 @@ export default function CoverflowSlideshow({
     return () => ro.disconnect()
   }, [])
 
-  const actualCardWidth = Math.min(cardWidth, Math.max(280, containerWidth - 48))
-  const actualCardHeight = Math.min(cardHeight, 560)
+  const isMobile = containerWidth < 640
+  const actualCardWidth = isMobile
+    ? Math.min(360, Math.max(280, containerWidth - 36))
+    : Math.min(cardWidth, Math.max(320, containerWidth - 48))
+  const actualCardHeight = isMobile ? 470 : Math.min(cardHeight, 560)
+  const gapMultiplier = isMobile ? 18 : 32
 
   const rootStyle: CSSProperties = {
     position: "relative",
     width: "100%",
     height: "100%",
-    minHeight: 560,
+    minHeight: isMobile ? 490 : 560,
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -178,6 +207,7 @@ export default function CoverflowSlideshow({
     perspective: `${PERSPECTIVE}px`,
     overflow: "hidden",
     outline: "none",
+    touchAction: "pan-y",
     ...style,
   }
 
@@ -189,7 +219,9 @@ export default function CoverflowSlideshow({
       role="group"
       aria-roledescription="carousel"
       onKeyDown={onKeyDown}
-      className="select-none py-6"
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      className="select-none py-4 sm:py-6"
     >
       {/* 3D Preserved Stage */}
       <div
@@ -210,7 +242,7 @@ export default function CoverflowSlideshow({
           const visible = ax <= MAX_VISIBLE
           const isActive = rel === 0
           const sc = Math.max(0.4, 1 - ax * SCALE_STEP)
-          const tx = rel * (gap * 32)
+          const tx = rel * (gap * gapMultiplier)
           const tz = -ax * DEPTH
           const ry = -rel * tilt
           const rz = rel * sideTilt
@@ -243,7 +275,7 @@ export default function CoverflowSlideshow({
               onClick={() => handleCardClick(i)}
               aria-label={slide.title}
               aria-hidden={!visible}
-              className="group flex flex-col justify-between p-6 sm:p-8 text-[#EEEAE3] transition-colors"
+              className="group flex flex-col justify-between p-5 sm:p-8 text-[#EEEAE3] transition-colors"
             >
               {/* Card Ambient Glow */}
               <div
@@ -255,18 +287,18 @@ export default function CoverflowSlideshow({
 
               {/* Card Header */}
               <div className="relative z-10">
-                <div className="flex items-center justify-between pb-3 border-b border-[#EEEAE3]/15">
+                <div className="flex items-center justify-between pb-2.5 sm:pb-3 border-b border-[#EEEAE3]/15">
                   <div className="flex items-center gap-2">
                     <span
-                      className="w-2 h-2 rounded-full"
+                      className="w-2 h-2 rounded-full shrink-0"
                       style={{ backgroundColor: slide.accentColor }}
                     />
-                    <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[#EEEAE3]/60">
+                    <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#EEEAE3]/60">
                       Discipline {slide.num}
                     </span>
                   </div>
                   <span
-                    className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider border"
+                    className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono uppercase tracking-wider border truncate max-w-[140px]"
                     style={{
                       borderColor: `${slide.accentColor}40`,
                       backgroundColor: `${slide.accentColor}15`,
@@ -277,32 +309,32 @@ export default function CoverflowSlideshow({
                   </span>
                 </div>
 
-                <div className="mt-4">
-                  <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#EEEAE3]/40">
+                <div className="mt-3 sm:mt-4">
+                  <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#EEEAE3]/40">
                     {slide.subtitle}
                   </span>
-                  <h3 className="font-['Instrument_Serif'] text-2xl sm:text-3xl md:text-4xl leading-tight text-[#EEEAE3] mt-1">
+                  <h3 className="font-['Instrument_Serif'] text-xl sm:text-2xl md:text-3xl lg:text-4xl leading-tight text-[#EEEAE3] mt-1">
                     {slide.title}
                   </h3>
-                  <p className="mt-2 text-xs sm:text-sm text-[#EEEAE3]/70 leading-relaxed font-light line-clamp-3">
+                  <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-[#EEEAE3]/70 leading-relaxed font-light line-clamp-2 sm:line-clamp-3">
                     {slide.desc}
                   </p>
                 </div>
               </div>
 
               {/* Skills Breakdown Grid (Replaces images with structured skills) */}
-              <div className="relative z-10 my-auto py-3 space-y-3">
+              <div className="relative z-10 my-auto py-2 sm:py-3 space-y-2 sm:space-y-3">
                 {slide.coreSkills.map((section) => (
-                  <div key={section.category} className="space-y-1.5">
-                    <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.18em] text-[#EEEAE3]/50">
-                      <span className="w-1 h-1 rounded-full bg-[#EEEAE3]/30" />
+                  <div key={section.category} className="space-y-1 sm:space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.15em] sm:tracking-[0.18em] text-[#EEEAE3]/50">
+                      <span className="w-1 h-1 rounded-full bg-[#EEEAE3]/30 shrink-0" />
                       <span>{section.category}</span>
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-1 sm:gap-1.5">
                       {section.items.map((skill) => (
                         <span
                           key={skill}
-                          className="px-2 py-1 rounded bg-[#EEEAE3]/10 hover:bg-[#EEEAE3]/20 border border-[#EEEAE3]/10 text-[11px] font-mono text-[#EEEAE3]/90 transition-colors"
+                          className="px-1.5 py-0.5 sm:px-2 sm:py-1 rounded bg-[#EEEAE3]/10 hover:bg-[#EEEAE3]/20 border border-[#EEEAE3]/10 text-[10px] sm:text-[11px] font-mono text-[#EEEAE3]/90 transition-colors"
                         >
                           {skill}
                         </span>
@@ -313,12 +345,12 @@ export default function CoverflowSlideshow({
               </div>
 
               {/* Card Footer */}
-              <div className="relative z-10 pt-4 border-t border-[#EEEAE3]/15 flex items-center justify-between text-[11px] font-mono text-[#EEEAE3]/60">
-                <div className="flex items-center gap-1.5">
+              <div className="relative z-10 pt-3 sm:pt-4 border-t border-[#EEEAE3]/15 flex items-center justify-between text-[10px] sm:text-[11px] font-mono text-[#EEEAE3]/60">
+                <div className="flex items-center gap-1.5 truncate max-w-[200px]">
                   <span className="text-[#EEEAE3]/40">Metric:</span>
-                  <span className="text-[#EEEAE3]/90">{slide.metrics || "Academic & Applied Core"}</span>
+                  <span className="text-[#EEEAE3]/90 truncate">{slide.metrics || "Core"}</span>
                 </div>
-                <span className="text-[10px] uppercase tracking-widest text-[#EEEAE3]/40">
+                <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-[#EEEAE3]/40 shrink-0">
                   {isActive ? "Active View" : "Click to view"}
                 </span>
               </div>

@@ -125,31 +125,31 @@ const TECH_PILLARS: TechSkillSlide[] = [
 
 export default function SpecializationsSection() {
   return (
-    <section className="relative min-h-screen py-20 px-6 sm:px-8 md:px-12 lg:px-16 bg-[#151412] text-[#EEEAE3] overflow-hidden flex flex-col justify-between">
+    <section className="relative min-h-screen py-14 sm:py-20 px-4 sm:px-8 md:px-12 lg:px-16 bg-[#151412] text-[#EEEAE3] overflow-hidden flex flex-col justify-between">
       {/* Top Bar Header */}
       <div className="max-w-7xl mx-auto w-full">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[#EEEAE3]/15 pb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 border-b border-[#EEEAE3]/15 pb-6 sm:pb-8">
           <div>
-            <div className="flex items-center gap-3 mb-3">
-              <span className="font-mono text-xs uppercase tracking-[0.25em] text-[#EEEAE3]/50">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+              <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#EEEAE3]/50">
                 [03] Technical Domains
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-[#EEEAE3]/30" />
-              <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#EEEAE3]/70">
+              <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#EEEAE3]/70">
                 Curated Tech Pillars
               </span>
             </div>
-            <h2 className="font-['Instrument_Serif'] text-4xl sm:text-5xl md:text-6xl text-[#EEEAE3] tracking-tight leading-[1.05]">
+            <h2 className="font-['Instrument_Serif'] text-3xl sm:text-5xl md:text-6xl text-[#EEEAE3] tracking-tight leading-[1.05]">
               Curated Technical Pillars &amp; Skills
             </h2>
           </div>
           <p className="max-w-md text-xs sm:text-sm text-[#EEEAE3]/70 leading-relaxed font-light">
-            An interactive 3D coverflow showcase of core computational pillars. Navigate between cards to inspect the framework proficiencies, engineering competencies, and technical domains.
+            An interactive 3D coverflow showcase of core computational pillars. Swipe on mobile or click cards to inspect the framework proficiencies and applied competencies.
           </p>
         </div>
 
         {/* 3D Coverflow Stage with Skills replacing images */}
-        <div className="mt-8">
+        <div className="mt-6 sm:mt-8">
           <CoverflowSlideshow
             slides={TECH_PILLARS}
             cardWidth={520}
@@ -165,14 +165,14 @@ export default function SpecializationsSection() {
       </div>
 
       {/* Bottom Context Strip */}
-      <div className="max-w-7xl mx-auto w-full pt-8 mt-12 border-t border-[#EEEAE3]/15 flex flex-wrap items-center justify-between text-xs font-mono text-[#EEEAE3]/40 gap-4">
-        <div className="flex items-center gap-4">
+      <div className="max-w-7xl mx-auto w-full pt-6 mt-8 sm:pt-8 sm:mt-12 border-t border-[#EEEAE3]/15 flex flex-wrap items-center justify-between text-[10px] sm:text-xs font-mono text-[#EEEAE3]/40 gap-3">
+        <div className="flex items-center gap-3 sm:gap-4">
           <span>✦ 5 Pillars in Active Practice</span>
           <span className="hidden sm:inline text-[#EEEAE3]/20">|</span>
           <span className="hidden sm:inline">Bennett University B.Tech CSE</span>
         </div>
         <div>
-          <span>Click any card or use arrow keys ← →</span>
+          <span>Swipe left / right or click cards</span>
         </div>
       </div>
     </section>

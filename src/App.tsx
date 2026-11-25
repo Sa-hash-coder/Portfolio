@@ -86,31 +86,31 @@ export default function App() {
         </div>
 
         {/* Section [05]: Next Chapter Prompt */}
-        <section className="min-h-[50vh] flex flex-col justify-between p-8 md:p-16 border-t border-[#151412]/15 bg-[#EEEAE3]">
-          <div className="my-auto py-12 text-center max-w-2xl mx-auto">
-            <span className="text-xs uppercase tracking-[0.3em] text-[#151412]/50 block mb-4">
+        <section className="min-h-[45vh] sm:min-h-[50vh] flex flex-col justify-between p-5 sm:p-12 md:p-16 border-t border-[#151412]/15 bg-[#EEEAE3] overflow-hidden">
+          <div className="my-auto py-8 sm:py-12 text-center max-w-2xl mx-auto">
+            <span className="text-[10px] sm:text-xs uppercase tracking-[0.25em] sm:tracking-[0.3em] text-[#151412]/50 block mb-3 sm:mb-4">
               Continuous Scroll Sequence
             </span>
-            <h2 className="font-['Instrument_Serif'] text-4xl md:text-6xl italic leading-tight text-[#151412]">
+            <h2 className="font-['Instrument_Serif'] text-3xl sm:text-4xl md:text-6xl italic leading-tight text-[#151412]">
               "Merging analytical rigor with software craftsmanship."
             </h2>
-            <div className="mt-8 flex justify-center gap-4">
+            <div className="mt-6 sm:mt-8 flex justify-center gap-4">
               <button
                 type="button"
                 onClick={() => {
                   robotRef.current?.triggerWave(1)
                   lenisRef.current?.scrollTo(0, { duration: 1.5 })
                 }}
-                className="px-4 py-2 border border-[#151412]/20 hover:border-[#151412] hover:bg-[#151412] hover:text-[#EEEAE3] transition-all rounded-full text-xs uppercase tracking-widest cursor-pointer font-medium"
+                className="px-4 py-2 border border-[#151412]/20 hover:border-[#151412] hover:bg-[#151412] hover:text-[#EEEAE3] transition-all rounded-full text-[10px] sm:text-xs uppercase tracking-widest cursor-pointer font-medium active:scale-95"
               >
-                ↑ Return to top & greet companion
+                ↑ Return to top &amp; greet companion
               </button>
             </div>
           </div>
 
-          <div className="flex justify-between items-center text-xs uppercase tracking-[0.25em] text-[#151412]/50 border-t border-[#151412]/15 pt-4">
+          <div className="flex flex-wrap justify-between items-center text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#151412]/50 border-t border-[#151412]/15 pt-3 sm:pt-4 gap-2">
             <span>Saurabh Tewari · 2026</span>
-            <span>Awaiting next section ↓</span>
+            <span>Bennett University CSE</span>
           </div>
         </section>
       </main>
