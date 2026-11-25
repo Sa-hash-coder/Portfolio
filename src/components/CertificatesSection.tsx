@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import BookshelfCoverFlip from "./BookshelfCoverFlip"
-import BookReaderModal from "./BookReaderModal"
+import Physical3DBookViewer from "./Physical3DBookViewer"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -410,8 +410,8 @@ export default function CertificatesSection() {
         </div>
       </div>
 
-      {/* Floating 3D Open-Book Reader Modal */}
-      <BookReaderModal
+      {/* Real 3D Physical Book Lift-Out & Page Flipping Stage */}
+      <Physical3DBookViewer
         isOpen={isReaderOpen}
         bookIndex={selectedBookIndex}
         books={CERTIFICATES}

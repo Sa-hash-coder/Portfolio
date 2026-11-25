@@ -895,11 +895,13 @@ export default function BookshelfCoverFlip(props: any) {
                                 {/* spine face */}
                                 <div
                                     ref={(el) => { spineFaceEls.current[i] = el }}
+                                    onClick={(e) => { e.stopPropagation(); props.onBookClick?.(i); }}
                                     style={{
                                         visibility: initStyles[i].spineVisibility,
                                         position: "absolute", left: 0, bottom: 0, width: sw, height: h,
                                         background: b.spineColor, borderRadius: 1, overflow: "hidden",
                                         backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden",
+                                        cursor: "pointer",
                                     }}
                                 >
                                     {/* Shading and words on the spine. Near fully open the spine is seen edge-on, a pixel
@@ -949,6 +951,7 @@ export default function BookshelfCoverFlip(props: any) {
                                     book; tucked under the spine, the seam is covered by the cover itself. */}
                                 <div
                                     ref={(el) => { coverFaceEls.current[i] = el }}
+                                    onClick={(e) => { e.stopPropagation(); props.onBookClick?.(i); }}
                                     style={{
                                         position: "absolute", left: sw - 1, bottom: 0, width: cw + 1, height: h,
                                         visibility: initStyles[i].coverVisibility,
@@ -956,6 +959,7 @@ export default function BookshelfCoverFlip(props: any) {
                                         backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden",
                                         background: `linear-gradient(180deg, ${mix(b.coverColor, "#FFFFFF", 0.08)} 0%, ${b.coverColor} 100%)`,
                                         overflow: "hidden", color: coverText,
+                                        cursor: "pointer",
                                     }}
                                 >
                                     {/* Everything drawn on the cover. Edge-on, the whole cover squeezes into a pixel or
