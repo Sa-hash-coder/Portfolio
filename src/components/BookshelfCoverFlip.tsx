@@ -323,9 +323,6 @@ function rowLayout(g: Geom, es: number[]): Slot[] {
     return out
 }
 
-/** Book faces are laid out at this multiple and shrunk back, so their 3D bitmaps are only scaled down. */
-const FACE_SS = 2
-
 /** 3D in the book transform only while it turns or tilts; see slotStyles. */
 const FLAT_EPS = 1e-4
 
@@ -354,17 +351,19 @@ function slotStyles(g: Geom, L: Slot, liftPx: number, tiltDeg: number, shadowOp:
     const px = (v: number) => (settled ? Math.round(v) : v)
     return {
         slot: {
-            transform: flat ? `translate(${px(L.x)}px, ${px(g.floorY - g.boxH)}px)` : `translate3d(${L.x}px, ${g.floorY - g.boxH}px, 0px)`,
+            transform: `translate3d(${px(L.x)}px, ${px(g.floorY - g.boxH)}px, 0px)`,
             width: `${Math.max(1, L.w)}px`,
             height: `${g.boxH}px`,
             perspective: flat ? "none" : `${g.P}px`,
             perspectiveOrigin: `${L.w / 2}px ${g.boxH * 0.55}px`,
+            willChange: "transform",
         },
         book: {
             transform: flat
                 ? `translateY(${-liftPx}px)${open ? ` scale(${L.m})` : ""}`
                 : `translateY(${-liftPx}px) translateZ(${-g.sw * Math.sin(L.th)}px) scale(${L.m}) rotateX(${tiltDeg}deg) rotateY(${(-L.th * 180) / Math.PI}deg)`,
             transformStyle: (flat ? "flat" : "preserve-3d") as "flat" | "preserve-3d",
+            willChange: "transform",
         },
         // Closed, the cover is edge-on: hidden, so its 3D hinge makes no layer beside the spine.
         // Open, it slides back onto the book's origin, where the hinge put it.
@@ -542,16 +541,27 @@ export default function BookshelfCoverFlip(props: any) {
         return () => mq.removeEventListener?.("change", set)
     }, [])
 
+    const wakeRef = useRef<() => void>(() => {})
+
     useEffect(() => {
         let raf = 0
         let last = -1
         let visible = true
+
+        const wake = () => {
+            if (!visible) return
+            if (!raf) {
+                last = -1
+                raf = requestAnimationFrame(tick)
+            }
+        }
+        wakeRef.current = wake
+
         const tick = (now: number) => {
             if (!visible) {
                 raf = 0
                 return
             }
-            raf = requestAnimationFrame(tick)
             const dt = last < 0 ? 0 : Math.min((now - last) / 1000, 1 / 20)
             last = now
             const s = stRef.current
@@ -650,6 +660,13 @@ export default function BookshelfCoverFlip(props: any) {
                 const pe = spineEls.current[i]
                 if (pe && pe.style.opacity !== ss.spineOpacity) pe.style.opacity = ss.spineOpacity
             }
+
+            // Sleep RAF loop when animation settles to prevent mobile GPU battery drain
+            if (settled && !a.autoPlay && !s.pointerIn && Math.abs(s.py - s.ty) < 0.005) {
+                raf = 0
+                return
+            }
+            raf = requestAnimationFrame(tick)
         }
         // Pause while off screen; resume without a dt jump.
         const root = rootRef.current
@@ -670,6 +687,11 @@ export default function BookshelfCoverFlip(props: any) {
             io?.disconnect()
         }
     }, [isStatic])
+
+    // Wake the animation immediately whenever activeBook changes
+    useEffect(() => {
+        wakeRef.current()
+    }, [props.activeBook])
 
     // Hit test against the settled layout, so a book shifting under the pointer never hands the hover on.
     const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -822,9 +844,9 @@ export default function BookshelfCoverFlip(props: any) {
                                     soft; laid out larger, the bitmap is only ever scaled down. */}
                                 <div
                                     style={{
-                                        position: "absolute", left: 0, bottom: 0, width: sw, height: h, zoom: FACE_SS,
-                                        transform: `scale3d(${1 / FACE_SS}, ${1 / FACE_SS}, ${1 / FACE_SS})`,
+                                        position: "absolute", left: 0, bottom: 0, width: sw, height: h,
                                         transformOrigin: "0px 100% 0px", transformStyle: "preserve-3d",
+                                        willChange: "transform",
                                     }}
                                 >
                                 {/* spine face */}

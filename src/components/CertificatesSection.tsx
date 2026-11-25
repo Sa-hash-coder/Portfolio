@@ -96,6 +96,7 @@ const CERTIFICATES: Certificate[] = [
 export default function CertificatesSection() {
   const pinContainerRef = useRef<HTMLDivElement>(null)
   const [activeBookIndex, setActiveBookIndex] = useState(0)
+  const lastIndexRef = useRef(-1)
 
   // Map to the bookshelf book format expected by BookshelfCoverFlip
   const shelfBooks = CERTIFICATES.map((cert) => ({
@@ -111,20 +112,26 @@ export default function CertificatesSection() {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
+      const isMobile = window.innerWidth < 768
+
       ScrollTrigger.create({
         trigger: pinContainerRef.current,
         start: "top top",
-        end: "+=2200",
+        end: () => (isMobile ? "+=1100" : "+=2000"),
         pin: true,
-        scrub: 0.3,
+        anticipatePin: 1,
+        fastScrollEnd: true,
+        scrub: isMobile ? 0.15 : 0.3,
         onUpdate: (self) => {
-          const p = self.progress
-          // 5 books: 0, 1, 2, 3, 4
           const idx = Math.min(
             CERTIFICATES.length - 1,
-            Math.max(0, Math.floor(p * CERTIFICATES.length))
+            Math.max(0, Math.floor(self.progress * CERTIFICATES.length))
           )
-          setActiveBookIndex(idx)
+          // Only update state when the volume index actually changes
+          if (idx !== lastIndexRef.current) {
+            lastIndexRef.current = idx
+            setActiveBookIndex(idx)
+          }
         },
       })
     }, pinContainerRef)
@@ -204,19 +211,19 @@ export default function CertificatesSection() {
                 books={shelfBooks}
                 activeBook={activeBookIndex}
                 disablePointer={true}
-                size={400}
+                size={380}
                 spineWidth={14}
-                speed={65}
+                speed={75}
                 background="transparent"
                 advanced={{
                   floorColor: "#151412",
                   floorOpacity: 16,
                   gap: 3,
                   hover: 50,
-                  openMs: 480,
-                  closeMs: 580,
+                  openMs: 380,
+                  closeMs: 440,
                   autoPlay: false,
-                  shadowOpacity: 50,
+                  shadowOpacity: 45,
                 }}
               />
             </div>
