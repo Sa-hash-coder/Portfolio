@@ -1,4 +1,17 @@
-import { useState, useEffect, useRef } from "react"
+/**
+ * Physical3DBookViewer — Cinematic GSAP-powered book lift-out + page turn
+ *
+ * Animation sequence (GSAP timeline, no Tailwind class toggling for 3D):
+ *   0. Backdrop fades in
+ *   1. Book rises from shelf plane (translateZ, rotateX, scale) → center stage
+ *   2. Front cover swings open (rotateY 0 → -180) with hinge at left edge
+ *   3. Leaf-1 turns (rotateY 0 → -180) showing foreword → content
+ *   4. UI chrome slides in (top bar + bottom controls)
+ *
+ * Close (reverse GSAP timeline, calls onClose() on complete)
+ */
+import { useEffect, useRef, useState } from "react"
+import gsap from "gsap"
 import { type CertificateItem } from "./BookReaderModal"
 import { CoverArt, lum } from "./BookshelfCoverFlip"
 
@@ -10,6 +23,7 @@ interface Physical3DBookViewerProps {
   onSelectBook: (index: number) => void
 }
 
+/* ─── Extended per-book detail pages ─── */
 const EXTENDED_DETAILS: Record<number, {
   overview: string
   problemSolved: string
@@ -43,7 +57,7 @@ const EXTENDED_DETAILS: Record<number, {
   },
   1: {
     overview:
-      "Terraverify is a specialized environmental intelligence and audit verification platform built to assess ecological datasets, carbon metrics, and environmental sustainability claims against transparent computational benchmarks.",
+      "Terraverify is a specialized environmental intelligence and audit verification platform built to assess ecological datasets, carbon metrics, and sustainability claims against transparent computational benchmarks.",
     problemSolved:
       "Greenwashing and unreliable sensor calibration often compromise ecological compliance reporting. Terraverify establishes an automated heuristic audit pipeline to detect anomalies in environmental claims.",
     architecture:
@@ -131,6 +145,13 @@ const EXTENDED_DETAILS: Record<number, {
   },
 }
 
+/* ─── Shared style helpers ─── */
+const preserve3d: React.CSSProperties = { transformStyle: "preserve-3d" }
+const backfaceHidden: React.CSSProperties = {
+  backfaceVisibility: "hidden",
+  WebkitBackfaceVisibility: "hidden",
+}
+
 export default function Physical3DBookViewer({
   isOpen,
   bookIndex,
@@ -138,534 +159,638 @@ export default function Physical3DBookViewer({
   onClose,
   onSelectBook,
 }: Physical3DBookViewerProps) {
-  const currentBook = books[bookIndex] || books[0]
-  const details = EXTENDED_DETAILS[bookIndex] || EXTENDED_DETAILS[0]
+  /* ── Refs for GSAP targets ── */
+  const overlayRef   = useRef<HTMLDivElement>(null)
+  const sceneRef     = useRef<HTMLDivElement>(null)   // perspective wrapper
+  const bookRef      = useRef<HTMLDivElement>(null)   // the whole book block
+  const coverRef     = useRef<HTMLDivElement>(null)   // right-half flap (front cover)
+  const leaf1Ref     = useRef<HTMLDivElement>(null)   // first turning leaf
+  const topBarRef    = useRef<HTMLDivElement>(null)
+  const bottomBarRef = useRef<HTMLDivElement>(null)
+  const shadowRef    = useRef<HTMLDivElement>(null)
 
-  // Animation Stage sequence:
-  // 0: Lifting out of shelf (starts at shelf plane, glides up to center)
-  // 1: Center stage reached, front cover swings open (-180deg)
-  // 2: Page 1 leaf turns over (-180deg)
-  // 3: Settled onto full 2-page detailed chapter spread
-  const [stage, setStage] = useState<0 | 1 | 2 | 3>(0)
+  /* ── State only for content visibility after book is open ── */
+  const [contentVisible, setContentVisible] = useState(false)
   const [activeSpreadPage, setActiveSpreadPage] = useState<1 | 2>(1)
-  const [isClosing, setIsClosing] = useState(false)
-  const timers = useRef<number[]>([])
 
-  const clearTimers = () => {
-    timers.current.forEach((t) => window.clearTimeout(t))
-    timers.current = []
-  }
+  const openTl  = useRef<gsap.core.Timeline | null>(null)
+  const closeTl = useRef<gsap.core.Timeline | null>(null)
+  const isClosingRef = useRef(false)
 
-  // Orchestrate the physical book opening sequence
+  /* ════════ OPEN sequence ════════ */
   useEffect(() => {
     if (!isOpen) {
-      setStage(0)
+      setContentVisible(false)
       setActiveSpreadPage(1)
-      setIsClosing(false)
-      clearTimers()
+      isClosingRef.current = false
       return
     }
 
-    setIsClosing(false)
-    setStage(0)
+    // Kill any stale timeline
+    openTl.current?.kill()
+    closeTl.current?.kill()
+    isClosingRef.current = false
+    setContentVisible(false)
     setActiveSpreadPage(1)
 
-    // Step 0 -> Step 1: Smoothly elevate book from shelf plane to center focal point
-    const t0 = window.setTimeout(() => {
-      setStage(1) // Front cover begins opening
-    }, 550)
+    // ── Lock initial positions via GSAP set (zero CSS transition interference) ──
+    gsap.set(overlayRef.current,   { opacity: 0 })
+    gsap.set(bookRef.current,      {
+      transformPerspective: 1800,
+      ...preserve3d,
+      z: -700,
+      y: 220,
+      rotateX: 28,
+      rotateY: -18,
+      scale: 0.38,
+      opacity: 0.6,
+      willChange: "transform",
+    })
+    gsap.set(coverRef.current,  { rotateY: 0, transformOrigin: "left center", ...preserve3d })
+    gsap.set(leaf1Ref.current,  { rotateY: 0, transformOrigin: "left center", ...preserve3d })
+    gsap.set(topBarRef.current,    { opacity: 0, y: -20 })
+    gsap.set(bottomBarRef.current, { opacity: 0, y:  20 })
+    gsap.set(shadowRef.current,    { opacity: 0, scaleX: 0.5 })
 
-    // Step 1 -> Step 2: Cover has opened, now turn the first interior page leaf
-    const t1 = window.setTimeout(() => {
-      setStage(2) // Leaf 1 begins turning
-    }, 1300)
+    const tl = gsap.timeline({ defaults: { ease: "power4.out" } })
+    openTl.current = tl
 
-    // Step 2 -> Step 3: Leaf has turned, settle on the open architectural spread
-    const t2 = window.setTimeout(() => {
-      setStage(3)
-    }, 1950)
+    // 0. Backdrop fades in
+    tl.to(overlayRef.current, { opacity: 1, duration: 0.35, ease: "power2.out" })
 
-    timers.current = [t0, t1, t2]
+    // 1. Book rises from shelf — the cinematic lift
+    tl.to(bookRef.current, {
+      z: 0,
+      y: 0,
+      rotateX: 0,
+      rotateY: 0,
+      scale: 1,
+      opacity: 1,
+      duration: 0.95,
+      ease: "power4.out",
+    }, "-=0.1")
 
-    // Keyboard navigation
-    const handleKeyDown = (e: KeyboardEvent) => {
+    // shadow grows as book lifts
+    tl.to(shadowRef.current, { opacity: 1, scaleX: 1, duration: 0.6 }, "<")
+
+    // 2. Brief pause — then front cover swings open
+    tl.to(coverRef.current, {
+      rotateY: -180,
+      duration: 0.75,
+      ease: "power2.inOut",
+    }, "+=0.08")
+
+    // 3. Leaf 1 turns slightly after cover starts
+    tl.to(leaf1Ref.current, {
+      rotateY: -180,
+      duration: 0.60,
+      ease: "power1.inOut",
+    }, "-=0.42")
+
+    // 4. UI chrome slides in
+    tl.to([topBarRef.current, bottomBarRef.current], {
+      opacity: 1,
+      y: 0,
+      duration: 0.4,
+      stagger: 0.08,
+      ease: "power3.out",
+    }, "-=0.35")
+
+    // 5. Reveal inner content
+    tl.call(() => setContentVisible(true), [], "-=0.2")
+
+    // keyboard
+    const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") handleClose()
       if (e.key === "ArrowLeft") {
-        if (activeSpreadPage === 2) {
-          setActiveSpreadPage(1)
-        } else {
-          onSelectBook((bookIndex - 1 + books.length) % books.length)
-        }
+        if (activeSpreadPage === 2) setActiveSpreadPage(1)
+        else onSelectBook((bookIndex - 1 + books.length) % books.length)
       }
       if (e.key === "ArrowRight") {
-        if (activeSpreadPage === 1) {
-          setActiveSpreadPage(2)
-        } else {
-          onSelectBook((bookIndex + 1) % books.length)
-        }
+        if (activeSpreadPage === 1) setActiveSpreadPage(2)
+        else onSelectBook((bookIndex + 1) % books.length)
       }
     }
-    window.addEventListener("keydown", handleKeyDown)
+    window.addEventListener("keydown", onKey)
     document.body.style.overflow = "hidden"
 
     return () => {
-      clearTimers()
-      window.removeEventListener("keydown", handleKeyDown)
-      document.body.style.overflow = "unset"
+      tl.kill()
+      window.removeEventListener("keydown", onKey)
+      document.body.style.overflow = ""
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, bookIndex])
 
+  /* ════════ CLOSE sequence ════════ */
   const handleClose = () => {
-    if (isClosing) return
-    setIsClosing(true)
-    clearTimers()
+    if (isClosingRef.current) return
+    isClosingRef.current = true
+    openTl.current?.kill()
 
-    // Smooth reverse sequence:
-    // 1. Fold interior leaf back
-    setStage(1)
-    setTimeout(() => {
-      // 2. Swing cover shut
-      setStage(0)
-      setTimeout(() => {
-        // 3. Complete glide back to shelf and unmount
+    const tl = gsap.timeline({
+      onComplete: () => {
+        isClosingRef.current = false
         onClose()
-      }, 500)
-    }, 450)
+      },
+    })
+    closeTl.current = tl
+
+    // Chrome slides out
+    tl.to([bottomBarRef.current, topBarRef.current], {
+      opacity: 0,
+      y: (i) => (i === 0 ? 20 : -20),
+      duration: 0.25,
+      stagger: 0.05,
+    })
+
+    // Leaf folds back
+    tl.to(leaf1Ref.current, {
+      rotateY: 0,
+      duration: 0.42,
+      ease: "power2.in",
+    }, "-=0.15")
+
+    // Cover slams shut
+    tl.to(coverRef.current, {
+      rotateY: 0,
+      duration: 0.52,
+      ease: "power2.in",
+    }, "-=0.28")
+
+    // Book sinks back to shelf plane
+    tl.to(bookRef.current, {
+      z: -700,
+      y: 220,
+      rotateX: 28,
+      rotateY: -18,
+      scale: 0.38,
+      opacity: 0,
+      duration: 0.65,
+      ease: "power3.in",
+    }, "-=0.18")
+
+    tl.to(shadowRef.current, { opacity: 0, scaleX: 0.4, duration: 0.4 }, "<")
+    tl.to(overlayRef.current, { opacity: 0, duration: 0.3, ease: "power2.in" }, "-=0.2")
+  }
+
+  /* ── Leaf 2 (specs page) interactive turn ── */
+  const leaf2Ref = useRef<HTMLDivElement>(null)
+  const handleFlipSpread = () => {
+    const next = activeSpreadPage === 1 ? 2 : 1
+    setActiveSpreadPage(next)
+    gsap.to(leaf2Ref.current, {
+      rotateY: next === 2 ? -180 : 0,
+      duration: 0.55,
+      ease: "power2.inOut",
+    })
   }
 
   if (!isOpen) return null
 
-  // Book color and cover art settings (identical to shelf!)
+  /* ── Book theming ── */
+  const currentBook = books[bookIndex] || books[0]
+  const details     = EXTENDED_DETAILS[bookIndex] || EXTENDED_DETAILS[0]
   const isLightCover = lum(currentBook.coverColor) > 0.55
   const ink = isLightCover
     ? ["#FBF6EA", "#A99C86", "#4A4136"]
     : ["#D2D0CC", "#8E949D", "#2F3442"]
   const artVariant = currentBook.artVariant ?? (bookIndex % 4)
 
-  // 3D Rotation Angles
-  const isCoverOpen = stage >= 1
-  const isLeaf1Turned = stage >= 2
-  const isLeaf2Turned = activeSpreadPage === 2
-
   return (
+    /* ── Backdrop ── */
     <div
+      ref={overlayRef}
       onClick={handleClose}
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-between p-3 sm:p-6 transition-all duration-500 ease-out select-none ${
-        isClosing ? "bg-black/0 opacity-0 pointer-events-none" : "bg-[#0A0908]/85 backdrop-blur-md opacity-100"
-      }`}
-      style={{ perspective: "2200px" }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 50,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "12px",
+        background: "rgba(10,9,8,0.88)",
+        backdropFilter: "blur(14px)",
+        WebkitBackdropFilter: "blur(14px)",
+        userSelect: "none",
+        willChange: "opacity",
+      }}
     >
-      {/* ── Top Bar: Navigation & Status ── */}
+      {/* ── Top Bar ── */}
       <div
+        ref={topBarRef}
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-5xl flex items-center justify-between gap-4 py-2 px-4 rounded-full bg-[#1A1815]/95 border border-[#EEEAE3]/15 text-[#EEEAE3] shadow-xl shrink-0 z-30 transition-all duration-500 ${
-          stage === 0 ? "opacity-0 -translate-y-4" : "opacity-100 translate-y-0"
-        }`}
+        style={{
+          width: "100%",
+          maxWidth: 900,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          padding: "8px 18px",
+          borderRadius: 999,
+          background: "rgba(26,24,21,0.97)",
+          border: "1px solid rgba(238,234,227,0.14)",
+          color: "#EEEAE3",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+          flexShrink: 0,
+          zIndex: 30,
+        }}
       >
-        <div className="flex items-center gap-2 sm:gap-3">
-          <span
-            className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
-            style={{ backgroundColor: currentBook.coverColor }}
-          />
-          <span className="font-mono text-[10px] sm:text-xs uppercase tracking-wider text-[#EEEAE3]/80 truncate">
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{
+            width: 10, height: 10, borderRadius: "50%", flexShrink: 0,
+            backgroundColor: currentBook.coverColor,
+            boxShadow: `0 0 8px ${currentBook.coverColor}99`,
+          }} />
+          <span style={{ fontFamily: "monospace", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(238,234,227,0.8)" }}>
             Volume 0{bookIndex + 1}: {currentBook.title}
           </span>
         </div>
 
-        <div className="hidden md:flex items-center gap-2 text-[11px] font-mono text-[#EEEAE3]/60">
-          <span className="text-amber-400">✦</span>
-          <span>
-            {stage === 0
-              ? "Lifting out of shelf..."
-              : stage < 3
-              ? "Opening hardcover & turning pages..."
-              : "Physical 3D Open Folio"}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Quick Volume Switchers */}
-          <div className="hidden sm:flex items-center gap-1.5 mr-2">
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Volume dots */}
+          <div style={{ display: "flex", gap: 6 }}>
             {books.map((b, i) => (
               <button
                 key={b.credentialId}
                 type="button"
                 onClick={() => onSelectBook(i)}
-                className={`h-2 rounded-full transition-all cursor-pointer ${
-                  i === bookIndex ? "w-6 bg-[#EEEAE3]" : "w-2 bg-[#EEEAE3]/25 hover:bg-[#EEEAE3]/50"
-                }`}
                 title={b.title}
+                style={{
+                  height: 8,
+                  width: i === bookIndex ? 24 : 8,
+                  borderRadius: 999,
+                  background: i === bookIndex ? "#EEEAE3" : "rgba(238,234,227,0.22)",
+                  border: "none",
+                  cursor: "pointer",
+                  transition: "all 0.3s",
+                  padding: 0,
+                }}
               />
             ))}
           </div>
-
           <button
             type="button"
             onClick={handleClose}
-            className="px-3.5 py-1 rounded-full bg-[#EEEAE3]/15 hover:bg-[#EEEAE3] hover:text-[#151412] text-[10px] sm:text-[11px] font-mono uppercase tracking-wider transition-all cursor-pointer border border-[#EEEAE3]/20"
+            style={{
+              padding: "4px 14px",
+              borderRadius: 999,
+              background: "rgba(238,234,227,0.12)",
+              border: "1px solid rgba(238,234,227,0.2)",
+              color: "#EEEAE3",
+              fontFamily: "monospace",
+              fontSize: 10,
+              textTransform: "uppercase",
+              letterSpacing: "0.14em",
+              cursor: "pointer",
+              transition: "background 0.2s",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "#EEEAE3"; e.currentTarget.style.color = "#151412" }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(238,234,227,0.12)"; e.currentTarget.style.color = "#EEEAE3" }}
           >
             Return to Shelf ✕
           </button>
         </div>
       </div>
 
-      {/* ── Center: 3D Physical Book Lift-Out & Open Stage ── */}
+      {/* ── 3D Scene ── */}
       <div
+        ref={sceneRef}
         onClick={(e) => e.stopPropagation()}
-        className="my-auto w-full flex items-center justify-center py-4 relative"
-        style={{ perspective: "2200px" }}
+        style={{
+          flex: 1,
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          perspective: "1800px",
+          perspectiveOrigin: "50% 48%",
+        }}
       >
-        {/* ── 3D BOOK ENSEMBLE ── */}
+        {/* ── Book Block (GSAP animates this) ── */}
         <div
-          className={`relative transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-            stage === 0 || isClosing
-              ? "translate-y-[150px] scale-[0.62] rotate-x-[14deg] rotate-y-[-6deg] opacity-95"
-              : "translate-y-0 scale-100 rotate-x-[0deg] rotate-y-[0deg] opacity-100"
-          }`}
+          ref={bookRef}
           style={{
+            position: "relative",
+            width: "min(94vw, 860px)",
+            height: "min(70vh, 530px)",
             transformStyle: "preserve-3d",
-            width: "min(94vw, 840px)",
-            height: "min(72vh, 520px)",
+            willChange: "transform",
           }}
         >
-          {/* 3D Realistic Contact Shadow underneath book */}
+          {/* Contact shadow */}
           <div
-            className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-[100%] pointer-events-none transition-all duration-700 blur-xl"
+            ref={shadowRef}
             style={{
-              background: "radial-gradient(ellipse at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.45) 45%, transparent 75%)",
-              opacity: stage > 0 && !isClosing ? 0.95 : 0.5,
-              transform: stage > 0 && !isClosing ? "scale(1.05)" : "scale(0.7)",
+              position: "absolute",
+              bottom: -36,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: "78%",
+              height: 48,
+              borderRadius: "100%",
+              background: "radial-gradient(ellipse at center, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 40%, transparent 72%)",
+              filter: "blur(10px)",
+              pointerEvents: "none",
+              willChange: "transform, opacity",
             }}
           />
 
-          {/* ════ LEFT HALF: Stationary Back Cover & Inside Left Spread ════ */}
+          {/* ══ LEFT HALF: Back cover / open left page ══ */}
           <div
-            className="absolute left-0 top-0 w-1/2 h-full rounded-l-2xl overflow-hidden border border-[#151412]/25 shadow-[inset_0_2px_15px_rgba(0,0,0,0.15),-20px_20px_45px_rgba(0,0,0,0.55)] transition-all duration-500"
             style={{
-              backgroundColor: isCoverOpen ? "#F4EFE6" : currentBook.coverColor,
-              transformOrigin: "right center",
+              position: "absolute",
+              left: 0, top: 0,
+              width: "50%", height: "100%",
+              borderRadius: "16px 0 0 16px",
+              overflow: "hidden",
+              border: "1px solid rgba(21,20,18,0.25)",
+              boxShadow: "-20px 20px 50px rgba(0,0,0,0.6), inset 0 2px 12px rgba(0,0,0,0.12)",
+              backgroundColor: contentVisible ? "#F4EFE6" : currentBook.coverColor,
+              transition: "background-color 0.3s",
             }}
           >
-            {isCoverOpen ? (
-              /* Inside Left Folio Page Spread */
-              <div className="w-full h-full p-4 sm:p-7 md:p-9 flex flex-col justify-between text-[#151412] relative bg-gradient-to-r from-[#ECE4D5] via-[#F4EFE6] to-[#FBF8F2]">
-                {/* Book spine crease shadow on the right edge */}
-                <div className="absolute right-0 top-0 bottom-0 w-8 pointer-events-none bg-gradient-to-l from-black/20 via-black/5 to-transparent" />
+            {contentVisible ? (
+              /* Inside Left Page */
+              <div style={{
+                width: "100%", height: "100%",
+                padding: "clamp(16px, 3vw, 36px)",
+                display: "flex", flexDirection: "column", justifyContent: "space-between",
+                color: "#151412",
+                background: "linear-gradient(135deg, #ECE4D5 0%, #F4EFE6 50%, #FBF8F2 100%)",
+                position: "relative",
+              }}>
+                {/* Spine crease */}
+                <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 28, background: "linear-gradient(to left, rgba(0,0,0,0.18), rgba(0,0,0,0.04), transparent)", pointerEvents: "none" }} />
 
-                {/* Top Folio Header */}
                 <div>
-                  <div className="flex items-center justify-between pb-2 border-b border-[#151412]/15 text-[9px] sm:text-[10px] font-mono text-[#151412]/60">
-                    <span className="uppercase tracking-[0.2em]">Volume 0{bookIndex + 1} · Architectural Folio</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: 8, borderBottom: "1px solid rgba(21,20,18,0.14)", fontFamily: "monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(21,20,18,0.55)" }}>
+                    <span>Volume 0{bookIndex + 1} · Folio</span>
                     <span>Plate A</span>
                   </div>
-
-                  {/* Title & Classification */}
-                  <div className="mt-4">
-                    <span
-                      className="px-2 py-0.5 rounded text-[8px] sm:text-[9px] font-mono font-semibold uppercase tracking-wider inline-block mb-1.5"
-                      style={{
-                        backgroundColor: `${currentBook.coverColor}18`,
-                        color: currentBook.coverColor,
-                      }}
-                    >
-                      {currentBook.label}
-                    </span>
-                    <h2 className="font-['Instrument_Serif'] text-xl sm:text-3xl md:text-4xl text-[#151412] leading-tight tracking-tight">
+                  <div style={{ marginTop: 14 }}>
+                    <span style={{
+                      display: "inline-block", padding: "2px 8px", borderRadius: 4,
+                      backgroundColor: `${currentBook.coverColor}1A`,
+                      color: currentBook.coverColor,
+                      fontFamily: "monospace", fontSize: 8, textTransform: "uppercase", letterSpacing: "0.18em",
+                      marginBottom: 6,
+                    }}>{currentBook.label}</span>
+                    <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "clamp(18px, 2.8vw, 36px)", lineHeight: 1.1, margin: 0 }}>
                       {currentBook.title}
                     </h2>
-                    <p className="text-[10px] sm:text-xs font-mono text-[#151412]/65 mt-0.5">
+                    <p style={{ fontFamily: "monospace", fontSize: 10, color: "rgba(21,20,18,0.6)", marginTop: 4 }}>
                       {currentBook.subtitle}
                     </p>
                   </div>
-
-                  {/* Overview Paragraph */}
-                  <div className="mt-4 sm:mt-5 text-[11px] sm:text-xs text-[#151412]/80 leading-relaxed font-light">
+                  <p style={{ marginTop: 14, fontSize: "clamp(9px, 1.1vw, 11px)", lineHeight: 1.65, color: "rgba(21,20,18,0.78)", fontWeight: 300 }}>
                     {details.overview}
-                  </div>
-
-                  {/* Problem Statement Box */}
-                  <div className="mt-4 p-3 rounded-xl bg-[#151412]/[0.03] border border-[#151412]/10">
-                    <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-wider text-[#151412]/50 block mb-1">
-                      Problem Solved:
-                    </span>
-                    <p className="text-[10px] sm:text-[11px] text-[#151412]/75 leading-relaxed font-light">
+                  </p>
+                  <div style={{ marginTop: 12, padding: 12, borderRadius: 10, background: "rgba(21,20,18,0.03)", border: "1px solid rgba(21,20,18,0.1)" }}>
+                    <span style={{ fontFamily: "monospace", fontSize: 8, textTransform: "uppercase", letterSpacing: "0.16em", color: "rgba(21,20,18,0.45)", display: "block", marginBottom: 4 }}>Problem Solved:</span>
+                    <p style={{ fontSize: "clamp(9px, 1.1vw, 11px)", color: "rgba(21,20,18,0.72)", lineHeight: 1.6, fontWeight: 300, margin: 0 }}>
                       {details.problemSolved}
                     </p>
                   </div>
                 </div>
-
-                {/* Bottom Specifications Bar */}
-                <div className="pt-3 border-t border-[#151412]/15 grid grid-cols-2 gap-2 text-[9px] sm:text-[10px] font-mono text-[#151412]/60">
-                  <div>
-                    <span className="text-[#151412]/40 block">Author:</span>
-                    <span className="font-semibold text-[#151412]">Saurabh Tewari</span>
-                  </div>
-                  <div>
-                    <span className="text-[#151412]/40 block">Registry:</span>
-                    <span className="text-emerald-700 font-medium">Verified Folio</span>
-                  </div>
+                <div style={{ paddingTop: 10, borderTop: "1px solid rgba(21,20,18,0.14)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontFamily: "monospace", fontSize: 9, color: "rgba(21,20,18,0.55)" }}>
+                  <div><span style={{ display: "block", color: "rgba(21,20,18,0.38)" }}>Author:</span><span style={{ fontWeight: 600, color: "#151412" }}>Saurabh Tewari</span></div>
+                  <div><span style={{ display: "block", color: "rgba(21,20,18,0.38)" }}>Registry:</span><span style={{ color: "#166534", fontWeight: 500 }}>Verified Folio</span></div>
                 </div>
               </div>
             ) : (
-              /* Back of closed book while lifting */
-              <div
-                className="w-full h-full flex flex-col justify-between p-6"
-                style={{ color: currentBook.textColor }}
-              >
-                <div className="text-[10px] font-mono uppercase tracking-widest opacity-40">
-                  Saurabh Tewari · CSE Archive
-                </div>
-                <div className="my-auto text-center font-['Instrument_Serif'] text-4xl italic opacity-35">
-                  {currentBook.monogram}
-                </div>
-                <div className="text-[10px] font-mono text-right opacity-40">
-                  Bennett University
-                </div>
+              /* Back of closed cover (shown while lifting) */
+              <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: 24, color: currentBook.textColor }}>
+                <div style={{ fontFamily: "monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.2em", opacity: 0.4 }}>Saurabh Tewari · CSE Archive</div>
+                <div style={{ textAlign: "center", fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 42, fontStyle: "italic", opacity: 0.3 }}>{currentBook.monogram}</div>
+                <div style={{ fontFamily: "monospace", fontSize: 9, textAlign: "right", opacity: 0.4 }}>Bennett University</div>
               </div>
             )}
           </div>
 
-          {/* ════ RIGHT HALF: Stationary Base Page / Inside Right Spread ════ */}
-          <div
-            className="absolute right-0 top-0 w-1/2 h-full rounded-r-2xl overflow-hidden border border-[#151412]/25 shadow-[inset_0_2px_15px_rgba(0,0,0,0.1),20px_20px_45px_rgba(0,0,0,0.55)] bg-gradient-to-l from-[#ECE4D5] via-[#F4EFE6] to-[#FBF8F2]"
-            style={{ transformOrigin: "left center" }}
-          >
-            {/* Book spine crease shadow on the left edge */}
-            <div className="absolute left-0 top-0 bottom-0 w-8 pointer-events-none bg-gradient-to-r from-black/20 via-black/5 to-transparent z-10" />
+          {/* ══ RIGHT HALF: Base page (always visible underneath flaps) ══ */}
+          <div style={{
+            position: "absolute",
+            right: 0, top: 0,
+            width: "50%", height: "100%",
+            borderRadius: "0 16px 16px 0",
+            overflow: "hidden",
+            border: "1px solid rgba(21,20,18,0.22)",
+            boxShadow: "20px 20px 50px rgba(0,0,0,0.55), inset 0 2px 12px rgba(0,0,0,0.08)",
+            background: "linear-gradient(225deg, #ECE4D5 0%, #F4EFE6 55%, #FBF8F2 100%)",
+          }}>
+            {/* Spine crease left */}
+            <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 28, background: "linear-gradient(to right, rgba(0,0,0,0.18), rgba(0,0,0,0.04), transparent)", zIndex: 2, pointerEvents: "none" }} />
+            {/* Paper stack illusion right */}
+            <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 10, background: "repeating-linear-gradient(to right, #E8DFCE 0px, #E8DFCE 1px, #D8CEBC 1px, #D8CEBC 2px)", pointerEvents: "none" }} />
 
-            {/* Simulated Paper Edge Stack (mimics depth of 200 pages on right) */}
-            <div
-              className="absolute right-0 top-0 bottom-0 w-2.5 pointer-events-none border-l border-amber-900/10"
-              style={{
-                background: "repeating-linear-gradient(to right, #E8DFCE 0px, #E8DFCE 1px, #D8CEBC 1px, #D8CEBC 2px)",
-              }}
-            />
-
-            {/* Right Spread Content */}
-            <div className="w-full h-full p-4 sm:p-7 md:p-9 flex flex-col justify-between text-[#151412] relative pr-6 sm:pr-8">
+            <div style={{ width: "100%", height: "100%", padding: "clamp(14px, 2.5vw, 32px)", paddingRight: "clamp(18px, 3vw, 42px)", display: "flex", flexDirection: "column", justifyContent: "space-between", color: "#151412", position: "relative" }}>
               <div>
-                <div className="flex items-center justify-between pb-2 border-b border-[#151412]/15 text-[9px] sm:text-[10px] font-mono text-[#151412]/60">
-                  <span className="uppercase tracking-[0.2em]">Engineering Specification &amp; Stack</span>
+                <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: 8, borderBottom: "1px solid rgba(21,20,18,0.14)", fontFamily: "monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.16em", color: "rgba(21,20,18,0.5)" }}>
+                  <span>Engineering Spec</span>
                   <span>Plate B</span>
                 </div>
-
-                {/* Architecture Narrative */}
-                <div className="mt-4">
-                  <h4 className="font-mono text-[9px] sm:text-[10px] uppercase tracking-wider font-semibold text-[#151412] mb-1">
-                    System Architecture &amp; Methodology:
-                  </h4>
-                  <p className="text-[10px] sm:text-[11px] text-[#151412]/80 leading-relaxed font-light">
-                    {details.architecture}
-                  </p>
+                <div style={{ marginTop: 14 }}>
+                  <h4 style={{ fontFamily: "monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.14em", fontWeight: 600, color: "#151412", margin: "0 0 4px" }}>System Architecture &amp; Methodology:</h4>
+                  <p style={{ fontSize: "clamp(9px, 1.1vw, 11px)", color: "rgba(21,20,18,0.78)", lineHeight: 1.65, fontWeight: 300, margin: 0 }}>{details.architecture}</p>
                 </div>
-
-                {/* Key Highlights */}
-                <div className="mt-4 sm:mt-5">
-                  <h4 className="font-mono text-[9px] sm:text-[10px] uppercase tracking-wider font-semibold text-[#151412] mb-2">
-                    Key Innovations &amp; Directives:
-                  </h4>
-                  <div className="space-y-1.5">
-                    {details.keyHighlights.slice(0, 3).map((highlight) => (
-                      <div key={highlight} className="flex items-start gap-2 text-[10px] sm:text-[11px] text-[#151412]/75 font-light">
-                        <span className="text-amber-800 text-xs shrink-0 mt-0.5">✦</span>
-                        <span>{highlight}</span>
+                <div style={{ marginTop: 14 }}>
+                  <h4 style={{ fontFamily: "monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.14em", fontWeight: 600, color: "#151412", margin: "0 0 8px" }}>Key Innovations:</h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                    {details.keyHighlights.slice(0, 3).map((h) => (
+                      <div key={h} style={{ display: "flex", gap: 7, fontSize: "clamp(9px, 1vw, 11px)", color: "rgba(21,20,18,0.72)", fontWeight: 300 }}>
+                        <span style={{ color: "#92400e", flexShrink: 0 }}>✦</span>
+                        <span>{h}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-
-                {/* Applied Technologies */}
-                <div className="mt-4 sm:mt-5">
-                  <h4 className="font-mono text-[8px] sm:text-[9px] uppercase tracking-wider text-[#151412]/50 mb-1.5">
-                    Applied Frameworks &amp; Tooling:
-                  </h4>
-                  <div className="flex flex-wrap gap-1 sm:gap-1.5">
-                    {currentBook.skills.map((skill) => (
-                      <span
-                        key={skill}
-                        className="px-2 py-0.5 rounded-full bg-[#151412]/5 border border-[#151412]/15 text-[9px] sm:text-[10px] font-mono text-[#151412]/80"
-                      >
-                        {skill}
-                      </span>
+                <div style={{ marginTop: 14 }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                    {currentBook.skills.map((s) => (
+                      <span key={s} style={{ padding: "2px 8px", borderRadius: 999, background: "rgba(21,20,18,0.05)", border: "1px solid rgba(21,20,18,0.14)", fontFamily: "monospace", fontSize: 9, color: "rgba(21,20,18,0.78)" }}>{s}</span>
                     ))}
                   </div>
                 </div>
               </div>
-
-              {/* Bottom Distinction Tag */}
-              <div className="pt-3 border-t border-[#151412]/15 flex items-center justify-between text-[9px] sm:text-[10px] font-mono">
-                <span className="text-emerald-800 font-medium truncate max-w-[220px] sm:max-w-none">
-                  {details.metrics}
-                </span>
-                <span className="text-[#151412]/40">ID: {currentBook.credentialId}</span>
+              <div style={{ paddingTop: 10, borderTop: "1px solid rgba(21,20,18,0.14)", display: "flex", justifyContent: "space-between", fontFamily: "monospace", fontSize: 9 }}>
+                <span style={{ color: "#166534", fontWeight: 500 }}>{details.metrics}</span>
+                <span style={{ color: "rgba(21,20,18,0.38)" }}>ID: {currentBook.credentialId}</span>
               </div>
             </div>
           </div>
 
-          {/* ════ FLIPPABLE LEAF 1: Animated Turning Page ════ */}
+          {/* ══ LEAF 1: First turning page (animates via GSAP) ══ */}
           <div
-            className="absolute right-0 top-0 w-1/2 h-full transition-transform duration-700 ease-in-out pointer-events-none"
+            ref={leaf1Ref}
             style={{
+              position: "absolute",
+              right: 0, top: 0,
+              width: "50%", height: "100%",
               transformOrigin: "left center",
               transformStyle: "preserve-3d",
-              transform: isLeaf1Turned ? "rotateY(-180deg)" : "rotateY(0deg)",
-              zIndex: isLeaf1Turned ? 15 : 28,
+              zIndex: 28,
+              pointerEvents: "none",
+              willChange: "transform",
             }}
           >
-            {/* Front Side of Leaf 1 (seen before turning) */}
-            <div
-              className="absolute inset-0 rounded-r-2xl p-5 sm:p-8 bg-[#FBF8F1] border-r border-[#151412]/15 shadow-[-5px_0_15px_rgba(0,0,0,0.12)] flex flex-col justify-between text-[#151412]"
-              style={{
-                backfaceVisibility: "hidden",
-                WebkitBackfaceVisibility: "hidden",
-              }}
-            >
+            {/* Front: Foreword */}
+            <div style={{
+              position: "absolute", inset: 0,
+              borderRadius: "0 16px 16px 0",
+              padding: "clamp(16px, 2.5vw, 36px)",
+              background: "#FBF8F1",
+              borderRight: "1px solid rgba(21,20,18,0.14)",
+              boxShadow: "-5px 0 18px rgba(0,0,0,0.14)",
+              display: "flex", flexDirection: "column", justifyContent: "space-between",
+              color: "#151412",
+              ...backfaceHidden,
+            }}>
               <div>
-                <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#151412]/40 block mb-3">
-                  Volume Foreword
-                </span>
-                <h3 className="font-['Instrument_Serif'] text-2xl sm:text-3xl text-[#151412] italic">
+                <span style={{ fontFamily: "monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(21,20,18,0.4)", display: "block", marginBottom: 10 }}>Volume Foreword</span>
+                <h3 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "clamp(16px, 2.2vw, 26px)", fontStyle: "italic", margin: "0 0 12px", lineHeight: 1.3 }}>
                   "{details.quote}"
                 </h3>
-                <p className="mt-4 text-xs text-[#151412]/75 leading-relaxed font-light">
+                <p style={{ fontSize: "clamp(9px, 1.1vw, 11px)", color: "rgba(21,20,18,0.72)", lineHeight: 1.65, fontWeight: 300, margin: 0 }}>
                   {details.overview}
                 </p>
               </div>
-              <div className="text-[10px] font-mono text-amber-800 animate-pulse">
-                Turning page... 📄
+              <div style={{ fontFamily: "monospace", fontSize: 9, color: "#92400e", display: "flex", alignItems: "center", gap: 5 }}>
+                <span>Turning page</span>
+                <span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>📄</span>
               </div>
             </div>
 
-            {/* Back Side of Leaf 1 (seen after turning over to the left side) */}
-            <div
-              className="absolute inset-0 rounded-l-2xl p-4 sm:p-7 bg-[#F4EFE6] border-l border-[#151412]/15 shadow-[5px_0_15px_rgba(0,0,0,0.12)] flex flex-col justify-between text-[#151412]"
-              style={{
-                backfaceVisibility: "hidden",
-                WebkitBackfaceVisibility: "hidden",
-                transform: "rotateY(180deg)",
-              }}
-            >
-              <div className="p-3 bg-[#151412]/[0.02] rounded-xl border border-[#151412]/10">
-                <span className="text-[9px] font-mono uppercase tracking-widest text-[#151412]/50 block mb-1">
-                  Technical Summary
-                </span>
-                <p className="font-['Instrument_Serif'] text-lg italic text-[#151412]">
-                  {currentBook.title}
-                </p>
-                <p className="mt-1 text-xs text-[#151412]/70 font-mono">
-                  {currentBook.subtitle}
-                </p>
+            {/* Back: Technical summary */}
+            <div style={{
+              position: "absolute", inset: 0,
+              borderRadius: "16px 0 0 16px",
+              padding: "clamp(14px, 2vw, 32px)",
+              background: "#F4EFE6",
+              borderLeft: "1px solid rgba(21,20,18,0.14)",
+              boxShadow: "5px 0 18px rgba(0,0,0,0.14)",
+              display: "flex", flexDirection: "column", justifyContent: "space-between",
+              color: "#151412",
+              ...backfaceHidden,
+              transform: "rotateY(180deg)",
+            }}>
+              <div style={{ padding: 14, background: "rgba(21,20,18,0.02)", borderRadius: 10, border: "1px solid rgba(21,20,18,0.1)" }}>
+                <span style={{ fontFamily: "monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(21,20,18,0.45)", display: "block", marginBottom: 4 }}>Technical Summary</span>
+                <p style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "clamp(16px, 2vw, 22px)", fontStyle: "italic", margin: "0 0 4px" }}>{currentBook.title}</p>
+                <p style={{ fontFamily: "monospace", fontSize: 9, color: "rgba(21,20,18,0.6)", margin: 0 }}>{currentBook.subtitle}</p>
               </div>
-              <div className="text-[9px] font-mono text-[#151412]/40">
-                Page turned · Bennett CSE Archive
-              </div>
+              <div style={{ fontFamily: "monospace", fontSize: 9, color: "rgba(21,20,18,0.38)" }}>Page turned · Bennett CSE Archive</div>
             </div>
           </div>
 
-          {/* ════ FLIPPABLE LEAF 2: Second Interactive Page ════ */}
+          {/* ══ LEAF 2: Interactive specs page ══ */}
           <div
-            className="absolute right-0 top-0 w-1/2 h-full transition-transform duration-700 ease-in-out pointer-events-none"
+            ref={leaf2Ref}
             style={{
+              position: "absolute",
+              right: 0, top: 0,
+              width: "50%", height: "100%",
               transformOrigin: "left center",
               transformStyle: "preserve-3d",
-              transform: isLeaf2Turned ? "rotateY(-180deg)" : "rotateY(0deg)",
-              zIndex: isLeaf2Turned ? 18 : 22,
+              zIndex: 22,
+              pointerEvents: contentVisible ? "auto" : "none",
+              willChange: "transform",
             }}
           >
-            {/* Front Side of Leaf 2 */}
-            <div
-              className="absolute inset-0 rounded-r-2xl p-5 sm:p-8 bg-[#FAF6EE] border-r border-[#151412]/15 shadow-[-4px_0_12px_rgba(0,0,0,0.08)] flex flex-col justify-between text-[#151412]"
-              style={{
-                backfaceVisibility: "hidden",
-                WebkitBackfaceVisibility: "hidden",
-              }}
-            >
+            {/* Front: Architecture */}
+            <div style={{
+              position: "absolute", inset: 0,
+              borderRadius: "0 16px 16px 0",
+              padding: "clamp(14px, 2vw, 32px)",
+              background: "#FAF6EE",
+              borderRight: "1px solid rgba(21,20,18,0.14)",
+              boxShadow: "-4px 0 12px rgba(0,0,0,0.08)",
+              display: "flex", flexDirection: "column", justifyContent: "space-between",
+              color: "#151412",
+              ...backfaceHidden,
+            }}>
               <div>
-                <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#151412]/40 block mb-2">
-                  System Architecture
-                </span>
-                <h4 className="font-['Instrument_Serif'] text-xl sm:text-2xl text-[#151412]">
-                  Core Architecture &amp; Methodology
-                </h4>
-                <p className="mt-2 text-xs text-[#151412]/75 leading-relaxed font-light">
-                  {details.architecture}
-                </p>
+                <span style={{ fontFamily: "monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(21,20,18,0.38)", display: "block", marginBottom: 6 }}>System Architecture</span>
+                <h4 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "clamp(16px, 2vw, 24px)", margin: "0 0 10px" }}>Core Architecture &amp; Methodology</h4>
+                <p style={{ fontSize: "clamp(9px, 1.1vw, 11px)", color: "rgba(21,20,18,0.72)", lineHeight: 1.65, fontWeight: 300, margin: 0 }}>{details.architecture}</p>
               </div>
-              <div className="text-[9px] font-mono text-[#151412]/50">
-                Leaf 02 · Click 'Flip to Specs' to view
-              </div>
+              <div style={{ fontFamily: "monospace", fontSize: 9, color: "rgba(21,20,18,0.45)" }}>Leaf 02 · tap bottom button to flip to specs</div>
             </div>
 
-            {/* Back Side of Leaf 2 */}
-            <div
-              className="absolute inset-0 rounded-l-2xl p-4 sm:p-7 bg-[#F4EFE6] border-l border-[#151412]/15 shadow-[4px_0_12px_rgba(0,0,0,0.08)] flex flex-col justify-between text-[#151412]"
-              style={{
-                backfaceVisibility: "hidden",
-                WebkitBackfaceVisibility: "hidden",
-                transform: "rotateY(180deg)",
-              }}
-            >
+            {/* Back: Specs table */}
+            <div style={{
+              position: "absolute", inset: 0,
+              borderRadius: "16px 0 0 16px",
+              padding: "clamp(14px, 2vw, 32px)",
+              background: "#F4EFE6",
+              borderLeft: "1px solid rgba(21,20,18,0.14)",
+              boxShadow: "4px 0 12px rgba(0,0,0,0.08)",
+              display: "flex", flexDirection: "column", justifyContent: "space-between",
+              color: "#151412",
+              ...backfaceHidden,
+              transform: "rotateY(180deg)",
+            }}>
               <div>
-                <span className="text-[9px] font-mono uppercase tracking-widest text-[#151412]/50 block mb-1">
-                  Specifications
-                </span>
-                <div className="space-y-1.5 text-[10px] font-mono text-[#151412]/75">
+                <span style={{ fontFamily: "monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(21,20,18,0.45)", display: "block", marginBottom: 10 }}>Specifications</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {details.specs.map((sp) => (
-                    <div key={sp.label} className="flex justify-between py-0.5 border-b border-[#151412]/10">
-                      <span className="text-[#151412]/50">{sp.label}:</span>
-                      <span className="font-medium text-[#151412]">{sp.value}</span>
+                    <div key={sp.label} style={{ display: "flex", justifyContent: "space-between", paddingBottom: 5, borderBottom: "1px solid rgba(21,20,18,0.08)", fontFamily: "monospace", fontSize: 10 }}>
+                      <span style={{ color: "rgba(21,20,18,0.5)" }}>{sp.label}:</span>
+                      <span style={{ fontWeight: 600, color: "#151412" }}>{sp.value}</span>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="text-[9px] font-mono text-[#151412]/40">
-                Specification Chapter
-              </div>
+              <div style={{ fontFamily: "monospace", fontSize: 9, color: "rgba(21,20,18,0.38)" }}>Specification Chapter</div>
             </div>
           </div>
 
-          {/* ════ HARDCOVER FRONT COVER: Swings Open with IDENTICAL Artwork! ════ */}
+          {/* ══ FRONT COVER: Swings open (GSAP animates coverRef) ══ */}
           <div
-            className="absolute right-0 top-0 w-1/2 h-full transition-transform duration-700 ease-in-out cursor-pointer pointer-events-auto"
+            ref={coverRef}
             style={{
+              position: "absolute",
+              right: 0, top: 0,
+              width: "50%", height: "100%",
               transformOrigin: "left center",
               transformStyle: "preserve-3d",
-              transform: isCoverOpen ? "rotateY(-180deg)" : "rotateY(0deg)",
-              zIndex: isCoverOpen ? 10 : 30,
+              zIndex: 35,
+              cursor: "pointer",
+              willChange: "transform",
             }}
           >
-            {/* ── OUTSIDE FRONT COVER: 100% IDENTICAL to the book on the shelf! ── */}
-            <div
-              className="absolute inset-0 rounded-r-2xl overflow-hidden shadow-[20px_20px_50px_rgba(0,0,0,0.65)] border-r-2 border-t border-b border-black/30 flex flex-col justify-between"
-              style={{
-                backgroundColor: currentBook.coverColor,
-                color: currentBook.textColor,
-                backfaceVisibility: "hidden",
-                WebkitBackfaceVisibility: "hidden",
-              }}
-            >
-              {/* Left spine vertical strip with vertical title (matching shelf!) */}
-              <div
-                className="absolute left-0 top-0 bottom-0 w-8 border-r border-white/15 flex items-start justify-center pt-5 overflow-hidden"
-                style={{ backgroundColor: "rgba(0,0,0,0.25)" }}
-              >
-                <span
-                  style={{
-                    writingMode: "vertical-rl",
-                    fontFamily: "Georgia, serif",
-                    fontSize: "11px",
-                    letterSpacing: "0.05em",
-                    opacity: 0.85,
-                  }}
-                  className="whitespace-nowrap"
-                >
+            {/* Outside Cover — identical to shelf! */}
+            <div style={{
+              position: "absolute", inset: 0,
+              borderRadius: "0 16px 16px 0",
+              overflow: "hidden",
+              backgroundColor: currentBook.coverColor,
+              color: currentBook.textColor,
+              boxShadow: "24px 24px 55px rgba(0,0,0,0.7), inset -1px 0 0 rgba(255,255,255,0.1)",
+              borderRight: "2px solid rgba(0,0,0,0.3)",
+              borderTop: "1px solid rgba(0,0,0,0.25)",
+              borderBottom: "1px solid rgba(0,0,0,0.25)",
+              display: "flex", flexDirection: "column", justifyContent: "space-between",
+              ...backfaceHidden,
+            }}>
+              {/* Spine strip left */}
+              <div style={{
+                position: "absolute", left: 0, top: 0, bottom: 0, width: 32,
+                background: "rgba(0,0,0,0.25)",
+                borderRight: "1px solid rgba(255,255,255,0.14)",
+                display: "flex", alignItems: "flex-start", justifyContent: "center",
+                paddingTop: 18, overflow: "hidden",
+              }}>
+                <span style={{ writingMode: "vertical-rl", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.06em", opacity: 0.85, whiteSpace: "nowrap" }}>
                   {currentBook.title}
                 </span>
               </div>
-
-              {/* Exact CoverArt SVG (Figure with hat, Eagle, Globe, Compass, etc.) */}
-              <div className="absolute left-9 sm:left-10 right-4 top-4 sm:top-5 h-[48%] flex items-center justify-center">
-                <div className="w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] md:w-[145px] md:h-[145px]">
+              {/* CoverArt (matches shelf 1:1) */}
+              <div style={{ position: "absolute", left: 38, right: 14, top: 14, height: "48%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: "clamp(90px, 14vw, 148px)", height: "clamp(90px, 14vw, 148px)" }}>
                   <CoverArt
                     variant={artVariant}
                     ink={ink}
@@ -675,116 +800,112 @@ export default function Physical3DBookViewer({
                   />
                 </div>
               </div>
-
-              {/* Text Area (Kicker Label, Title, Subtitle matching shelf layout!) */}
-              <div className="absolute left-10 sm:left-12 right-4 bottom-5 sm:bottom-6">
+              {/* Text block */}
+              <div style={{ position: "absolute", left: 42, right: 14, bottom: 20 }}>
                 {currentBook.label && (
-                  <div className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-medium opacity-85 mb-1.5">
-                    {currentBook.label}
-                  </div>
+                  <div style={{ fontFamily: "monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.2em", fontWeight: 500, opacity: 0.85, marginBottom: 5 }}>{currentBook.label}</div>
                 )}
-                <h3 className="font-['Instrument_Serif'] text-xl sm:text-2xl md:text-3xl leading-[1.08] text-white">
-                  {currentBook.title}
-                </h3>
-                <div className="flex items-center gap-2 mt-2 text-[10px] sm:text-[11px] font-mono opacity-80">
-                  <span className="w-4 h-[1px] bg-current inline-block" />
-                  <span className="truncate">{currentBook.subtitle}</span>
+                <h3 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "clamp(18px, 2.6vw, 30px)", lineHeight: 1.08, color: "#fff", margin: "0 0 6px" }}>{currentBook.title}</h3>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: "monospace", fontSize: 10, opacity: 0.78 }}>
+                  <span style={{ width: 16, height: 1, background: "currentColor" }} />
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentBook.subtitle}</span>
                 </div>
               </div>
-
-              {/* Gilded right edge accent */}
-              <div className="absolute right-0 top-0 bottom-0 w-[1px] bg-white/20" />
+              {/* Right gilded edge */}
+              <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 1, background: "rgba(255,255,255,0.18)" }} />
             </div>
 
-            {/* ── INSIDE FRONT COVER (Visible after cover swings open to the left) ── */}
-            <div
-              className="absolute inset-0 rounded-l-2xl p-5 sm:p-8 bg-[#EFE8DA] flex flex-col justify-between text-[#151412] border-l-2 border-t border-b border-[#151412]/20 shadow-[inset_-5px_0_15px_rgba(0,0,0,0.1)]"
-              style={{
-                backfaceVisibility: "hidden",
-                WebkitBackfaceVisibility: "hidden",
-                transform: "rotateY(180deg)",
-              }}
-            >
+            {/* Inside Cover (Ex Libris) */}
+            <div style={{
+              position: "absolute", inset: 0,
+              borderRadius: "16px 0 0 16px",
+              padding: "clamp(16px, 2.5vw, 36px)",
+              background: "#EFE8DA",
+              borderLeft: "2px solid rgba(21,20,18,0.2)",
+              borderTop: "1px solid rgba(21,20,18,0.15)",
+              borderBottom: "1px solid rgba(21,20,18,0.15)",
+              boxShadow: "inset -5px 0 18px rgba(0,0,0,0.1)",
+              display: "flex", flexDirection: "column", justifyContent: "space-between",
+              color: "#151412",
+              ...backfaceHidden,
+              transform: "rotateY(180deg)",
+            }}>
               <div>
-                <span className="text-[9px] font-mono uppercase tracking-[0.25em] text-[#151412]/50 block mb-2">
-                  Ex Libris
-                </span>
-                <div className="p-4 rounded-xl border border-dashed border-[#151412]/25 bg-[#FAF7F0] text-center">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#151412]/60 block">
-                    Curated Technical Volume
-                  </span>
-                  <h4 className="font-['Instrument_Serif'] text-xl sm:text-2xl mt-1 text-[#151412]">
-                    Saurabh Tewari
-                  </h4>
-                  <p className="text-[10px] font-mono text-[#151412]/50 mt-0.5">
-                    Bennett University · Computer Science
-                  </p>
+                <span style={{ fontFamily: "monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.22em", color: "rgba(21,20,18,0.45)", display: "block", marginBottom: 10 }}>Ex Libris</span>
+                <div style={{ padding: 16, borderRadius: 10, border: "1px dashed rgba(21,20,18,0.24)", background: "#FAF7F0", textAlign: "center" }}>
+                  <span style={{ fontFamily: "monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.14em", color: "rgba(21,20,18,0.55)", display: "block" }}>Curated Technical Volume</span>
+                  <h4 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "clamp(18px, 2.2vw, 26px)", margin: "6px 0 2px" }}>Saurabh Tewari</h4>
+                  <p style={{ fontFamily: "monospace", fontSize: 9, color: "rgba(21,20,18,0.45)", margin: 0 }}>Bennett University · Computer Science</p>
                 </div>
               </div>
-
-              <div className="text-[9px] font-mono text-[#151412]/40 text-center">
-                Hardcover Leaf Opening Sequence
-              </div>
+              <div style={{ fontFamily: "monospace", fontSize: 9, color: "rgba(21,20,18,0.35)", textAlign: "center" }}>Hardcover Opening Sequence</div>
             </div>
           </div>
 
-          {/* ════ BOOK SPINE 3D FOLD (Center Crease) ════ */}
-          <div
-            className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-5 pointer-events-none z-40"
-            style={{
-              background: "linear-gradient(90deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.1) 60%, rgba(0,0,0,0.35) 100%)",
-            }}
-          >
-            {/* Hanging Silk Ribbon Bookmark */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-14 bg-amber-700/85 rounded-b shadow-md flex items-end justify-center pb-1">
-              <span className="text-[8px] text-white/90">✦</span>
+          {/* ══ SPINE crease + bookmark ══ */}
+          <div style={{
+            position: "absolute",
+            left: "50%", transform: "translateX(-50%)",
+            top: 0, bottom: 0,
+            width: 20,
+            background: "linear-gradient(90deg, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0.08) 40%, rgba(0,0,0,0.08) 60%, rgba(0,0,0,0.38) 100%)",
+            pointerEvents: "none",
+            zIndex: 40,
+          }}>
+            {/* Silk ribbon bookmark */}
+            <div style={{
+              position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
+              width: 10, height: 52,
+              background: "linear-gradient(180deg, #92400e 0%, #b45309 100%)",
+              borderRadius: "0 0 5px 5px",
+              boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
+              display: "flex", alignItems: "flex-end", justifyContent: "center",
+              paddingBottom: 3,
+            }}>
+              <span style={{ fontSize: 7, color: "rgba(255,255,255,0.85)" }}>✦</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Bottom Controls: Interactive Page Turning & Volume Navigation ── */}
+      {/* ── Bottom Controls ── */}
       <div
+        ref={bottomBarRef}
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-3xl flex flex-wrap items-center justify-between gap-3 py-2.5 px-5 rounded-2xl bg-[#1A1815]/95 border border-[#EEEAE3]/15 text-[#EEEAE3] shadow-xl shrink-0 z-30 transition-all duration-500 ${
-          stage === 0 ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"
-        }`}
+        style={{
+          width: "100%", maxWidth: 760,
+          display: "flex", flexWrap: "wrap",
+          alignItems: "center", justifyContent: "space-between",
+          gap: 10,
+          padding: "10px 20px",
+          borderRadius: 20,
+          background: "rgba(26,24,21,0.97)",
+          border: "1px solid rgba(238,234,227,0.14)",
+          color: "#EEEAE3",
+          boxShadow: "0 -4px 24px rgba(0,0,0,0.4)",
+          flexShrink: 0,
+          zIndex: 30,
+        }}
       >
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => onSelectBook((bookIndex - 1 + books.length) % books.length)}
-            className="px-3 py-1 rounded-full border border-[#EEEAE3]/20 hover:border-[#EEEAE3] text-[10px] sm:text-xs font-mono uppercase tracking-wider transition-all cursor-pointer active:scale-95"
-            title="Previous volume"
-          >
+        <div style={{ display: "flex", gap: 8 }}>
+          <button type="button" onClick={() => onSelectBook((bookIndex - 1 + books.length) % books.length)}
+            style={{ padding: "4px 12px", borderRadius: 999, border: "1px solid rgba(238,234,227,0.2)", background: "transparent", color: "#EEEAE3", fontFamily: "monospace", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.12em", cursor: "pointer" }}>
             ← Vol 0{((bookIndex - 1 + books.length) % books.length) + 1}
           </button>
-          <button
-            type="button"
-            onClick={() => onSelectBook((bookIndex + 1) % books.length)}
-            className="px-3 py-1 rounded-full border border-[#EEEAE3]/20 hover:border-[#EEEAE3] text-[10px] sm:text-xs font-mono uppercase tracking-wider transition-all cursor-pointer active:scale-95"
-            title="Next volume"
-          >
+          <button type="button" onClick={() => onSelectBook((bookIndex + 1) % books.length)}
+            style={{ padding: "4px 12px", borderRadius: 999, border: "1px solid rgba(238,234,227,0.2)", background: "transparent", color: "#EEEAE3", fontFamily: "monospace", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.12em", cursor: "pointer" }}>
             Vol 0{((bookIndex + 1) % books.length) + 1} →
           </button>
         </div>
 
-        {/* Interactive 3D Page Turn Button */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveSpreadPage(activeSpreadPage === 1 ? 2 : 1)}
-            className="px-3.5 py-1 rounded-full border border-amber-400/40 bg-amber-400/10 hover:bg-amber-400/20 text-amber-200 text-[10px] sm:text-xs font-mono uppercase tracking-wider transition-all cursor-pointer shadow-sm active:scale-95"
-          >
-            {activeSpreadPage === 1 ? "Flip to Specs Page 📄 ↗" : "Flip Back to Chapter ↶"}
+        <div style={{ display: "flex", gap: 8 }}>
+          <button type="button" onClick={handleFlipSpread}
+            style={{ padding: "4px 14px", borderRadius: 999, border: "1px solid rgba(251,191,36,0.4)", background: "rgba(251,191,36,0.08)", color: "#fde68a", fontFamily: "monospace", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.12em", cursor: "pointer" }}>
+            {activeSpreadPage === 1 ? "Flip to Specs 📄" : "Back to Chapter ↶"}
           </button>
-
-          <button
-            type="button"
-            onClick={handleClose}
-            className="px-4 py-1 rounded-full bg-[#EEEAE3] text-[#151412] hover:bg-white text-[10px] sm:text-xs font-mono font-semibold uppercase tracking-wider transition-all cursor-pointer shadow-md active:scale-95"
-          >
-            Slide Back into Shelf ↩
+          <button type="button" onClick={handleClose}
+            style={{ padding: "4px 16px", borderRadius: 999, border: "none", background: "#EEEAE3", color: "#151412", fontFamily: "monospace", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", cursor: "pointer" }}>
+            Slide Back ↩
           </button>
         </div>
       </div>
