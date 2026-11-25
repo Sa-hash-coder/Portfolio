@@ -132,8 +132,8 @@ export default function ContactSection({ onBackToTop }: ContactSectionProps) {
                   <span className="text-[#EEEAE3]">Bennett University (B.Tech AI)</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#EEEAE3]/50">Academic Benchmark:</span>
-                  <span className="text-[#EEEAE3]">9.81 / 10 CGPA</span>
+                  <span className="text-[#EEEAE3]/50">Focus Area:</span>
+                  <span className="text-[#EEEAE3]">Artificial Intelligence &amp; Software</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[#EEEAE3]/50">Key Technologies:</span>

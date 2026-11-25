@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import BookshelfCoverFlip from "./BookshelfCoverFlip"
+import BookReaderModal from "./BookReaderModal"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -68,19 +69,19 @@ const CERTIFICATES: Certificate[] = [
     description: "Developed a university-focused platform to streamline lost-and-found item reporting, image matching, and discovery. Integrated Google Firebase for real-time data sync and authenticated claiming workflows.",
   },
   {
-    title: "Academic Rigor: 9.81 CGPA",
-    subtitle: "Bennett University · School of CSE (AI Track)",
+    title: "Foundational AI & Systems Research",
+    subtitle: "Bennett University · School of CSE",
     issuer: "Bennett University",
     issueDate: "2025–2026",
-    credentialId: "HONOR-BU-981",
-    label: "ACADEMIC EXCELLENCE",
+    credentialId: "ACAD-AI-RESEARCH",
+    label: "AI FOUNDATIONS",
     spineColor: "#211B29",
     textColor: "#F7F0FB",
     coverColor: "#2B2335",
-    monogram: "9.8",
+    monogram: "AI",
     artVariant: 4,
-    skills: ["Sem 1: 9.71 SGPA", "Sem 2: 9.91 SGPA", "Artificial Intelligence", "Data Structures", "Ranked Top Tier"],
-    description: "Maintained a top-tier academic benchmark with a 9.81/10 first-year CGPA in B.Tech Computer Science Engineering (Artificial Intelligence Specialization) at Bennett University.",
+    skills: ["Artificial Intelligence Track", "Deep Learning Foundations", "Data Structures", "Discrete Mathematics", "Systems Architecture"],
+    description: "Advanced coursework and core research in Artificial Intelligence, Neural Systems, and Computational Mathematics within the School of Computer Science Engineering at Bennett University.",
   },
   {
     title: "BUSIH Hackathon Distinction",
@@ -102,7 +103,14 @@ const CERTIFICATES: Certificate[] = [
 export default function CertificatesSection() {
   const pinContainerRef = useRef<HTMLDivElement>(null)
   const [activeBookIndex, setActiveBookIndex] = useState(0)
+  const [selectedBookIndex, setSelectedBookIndex] = useState(0)
+  const [isReaderOpen, setIsReaderOpen] = useState(false)
   const lastIndexRef = useRef(-1)
+
+  const handleOpenReader = (index: number) => {
+    setSelectedBookIndex(index)
+    setIsReaderOpen(true)
+  }
 
   // Map to the bookshelf book format expected by BookshelfCoverFlip
   const shelfBooks = CERTIFICATES.map((cert) => ({
@@ -213,11 +221,12 @@ export default function CertificatesSection() {
               </span>
             </div>
 
-            {/* Bookshelf Component (Zero timing, scroll driven) */}
+            {/* Bookshelf Component (Zero timing, scroll driven, click to read folio) */}
             <div className="w-full h-[320px] sm:h-[380px] md:h-[440px]">
               <BookshelfCoverFlip
                 books={shelfBooks}
                 activeBook={activeBookIndex}
+                onBookClick={handleOpenReader}
                 disablePointer={true}
                 size={380}
                 spineWidth={14}
@@ -234,6 +243,19 @@ export default function CertificatesSection() {
                   shadowOpacity: 45,
                 }}
               />
+            </div>
+
+            {/* Floating Quick Action: Click to open book reader spread */}
+            <div className="absolute bottom-2.5 sm:bottom-3.5 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+              <button
+                type="button"
+                onClick={() => handleOpenReader(activeBookIndex)}
+                className="flex items-center gap-2 px-3.5 sm:px-4 py-1.5 bg-[#151412] text-[#EEEAE3] rounded-full text-[10px] sm:text-[11px] font-mono uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer border border-[#EEEAE3]/25"
+                title={`Open Volume 0${activeBookIndex + 1} Interactive Folio`}
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <span className="font-medium truncate">Click book to float &amp; open reader ↗</span>
+              </button>
             </div>
 
             {/* Bottom Trim Bar with Active Certificate Metadata */}
@@ -310,9 +332,21 @@ export default function CertificatesSection() {
                   >
                     {cert.label}
                   </span>
-                  <span className="text-xs font-mono text-[#151412]/40">
-                    Volume 0{idx + 1}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-[#151412]/40">
+                      Volume 0{idx + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleOpenReader(idx)
+                      }}
+                      className="px-2.5 py-0.5 rounded bg-[#151412] text-[#EEEAE3] hover:bg-black text-[10px] font-mono uppercase tracking-wider transition-all cursor-pointer shadow-sm active:scale-95"
+                    >
+                      Read Folio ↗
+                    </button>
+                  </div>
                 </div>
 
                 <h4 className="font-['Instrument_Serif'] text-2xl text-[#151412] leading-snug">
@@ -362,7 +396,7 @@ export default function CertificatesSection() {
                 Analytical Rigor &amp; Practical Execution
               </h4>
               <p className="mt-3 text-xs text-[#EEEAE3]/70 font-light leading-relaxed">
-                Bridging academic excellence (<strong>9.81 CGPA</strong> at Bennett University) with production-ready AI/ML pipelines (<strong>ForeSite</strong>), environmental platforms (<strong>Terraverify</strong>), and community leadership at the <strong>Indian Blockchain Fraternity</strong>.
+                Bridging university academic excellence in Artificial Intelligence with production-ready AI/ML pipelines (<strong>ForeSite</strong>), environmental platforms (<strong>Terraverify</strong>), and community executive leadership at the <strong>Indian Blockchain Fraternity</strong>.
               </p>
             </div>
 
@@ -375,6 +409,18 @@ export default function CertificatesSection() {
           </div>
         </div>
       </div>
+
+      {/* Floating 3D Open-Book Reader Modal */}
+      <BookReaderModal
+        isOpen={isReaderOpen}
+        bookIndex={selectedBookIndex}
+        books={CERTIFICATES}
+        onClose={() => setIsReaderOpen(false)}
+        onSelectBook={(idx) => {
+          setSelectedBookIndex(idx)
+          setActiveBookIndex(idx)
+        }}
+      />
     </div>
   )
 }

@@ -66,9 +66,9 @@ export default function HeroSection({ robotRef, isLoaded = false, onNavigate, on
             <span className="font-medium text-[#151412] truncate">Greater Noida, Uttar Pradesh, India</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4 text-[#151412]/70 font-mono text-[10px] sm:text-[11px]">
-            <span>Bennett University · B.Tech CSE (AI)</span>
+            <span>Bennett University</span>
             <span className="px-2 py-0.5 bg-[#151412]/5 border border-[#151412]/15 rounded text-[#151412] font-semibold">
-              CGPA 9.81
+              B.Tech CSE (AI)
             </span>
           </div>
         </header>
@@ -208,7 +208,7 @@ export default function HeroSection({ robotRef, isLoaded = false, onNavigate, on
               "Curious and driven Computer Science undergraduate passionate about solving real-world problems through technology."
             </p>
             <p className="mt-1.5 sm:mt-2 text-xs md:text-sm text-[#151412]/75 font-light leading-relaxed max-w-2xl">
-              Specializing in Artificial Intelligence at Bennett University with a top-tier <strong>9.81 CGPA</strong> foundation. Focused on building practical machine learning models, NLP risk systems (<span className="text-[#151412] font-medium">ForeSite</span>), environmental verification tools (<span className="text-[#151412] font-medium">Terraverify</span>), and campus solutions (<span className="text-[#151412] font-medium">Findify</span>). Serving as Vice Chairperson at the Indian Blockchain Fraternity.
+              Specializing in Artificial Intelligence at Bennett University with a rigorous computational foundation. Focused on building practical machine learning models, NLP risk systems (<span className="text-[#151412] font-medium">ForeSite</span>), environmental verification tools (<span className="text-[#151412] font-medium">Terraverify</span>), and campus solutions (<span className="text-[#151412] font-medium">Findify</span>). Serving as Vice Chairperson at the Indian Blockchain Fraternity.
             </p>
 
             {/* Direct Jump Navigation Buttons */}
@@ -219,7 +219,7 @@ export default function HeroSection({ robotRef, isLoaded = false, onNavigate, on
                 onClick={() => handleNavClick("academics")}
                 className="px-3 py-1.5 border border-[#151412]/20 hover:border-[#151412] hover:bg-[#151412] hover:text-[#EEEAE3] transition-all rounded-full text-[11px] sm:text-xs uppercase tracking-wider cursor-pointer font-medium active:scale-95"
               >
-                [02] Academic Rigor (9.81 CGPA) →
+                [02] Academic Foundation →
               </button>
               <button
                 type="button"
@@ -255,15 +255,15 @@ export default function HeroSection({ robotRef, isLoaded = false, onNavigate, on
           {/* Quick Metrics on the Right */}
           <div className="md:col-span-4 flex flex-col gap-2 justify-between md:items-end text-[11px] sm:text-xs font-mono text-[#151412]/60">
             <div className="px-3.5 py-1.5 border border-[#151412]/15 rounded w-fit bg-[#151412]/[0.02] text-right">
-              Bennett University: <strong className="text-[#151412]">9.81 / 10 CGPA</strong>
-              <div className="text-[10px] text-[#151412]/50 font-normal">Sem 1: 9.71 · Sem 2: 9.91</div>
+              Bennett University: <strong className="text-[#151412]">B.Tech CSE (AI)</strong>
+              <div className="text-[10px] text-[#151412]/50 font-normal">Artificial Intelligence Specialization · 2029</div>
             </div>
             <div className="px-3.5 py-1.5 border border-[#151412]/15 rounded w-fit bg-[#151412]/[0.02] text-right">
-              Army Public School: <strong className="text-[#151412]">94.4% (XII)</strong>
-              <div className="text-[10px] text-[#151412]/50 font-normal">Class X: 95.2% · CBSE Distinction</div>
+              Army Public School: <strong className="text-[#151412]">94.4% (XII) · 95.2% (X)</strong>
+              <div className="text-[10px] text-[#151412]/50 font-normal">CBSE Board Distinction · Former Head Boy</div>
             </div>
             <div className="px-3.5 py-1.5 border border-[#151412]/15 rounded w-fit bg-[#151412]/[0.02] text-right">
-              BUSIH Hackathon 2026: <strong className="text-[#151412]">Rank 25</strong>
+              BUSIH Hackathon 2026: <strong className="text-[#151412]">Rank 25 Nationwide</strong>
               <div className="text-[10px] text-[#151412]/50 font-normal">Team ForeSite · Industrial Safety AI</div>
             </div>
           </div>

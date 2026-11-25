@@ -71,7 +71,7 @@ const TECH_PILLARS: TechSkillSlide[] = [
       },
     ],
     tags: ["C++", "Python", "DSA", "Algorithmic Precision"],
-    metrics: "9.81 CGPA Rigor · Bennett University Track",
+    metrics: "Algorithmic Rigor · Bennett AI Track",
   },
   {
     num: "04",

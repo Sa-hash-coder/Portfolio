@@ -869,7 +869,9 @@ export default function BookshelfCoverFlip(props: any) {
                         <div
                             key={"b" + i}
                             ref={(el) => { slotEls.current[i] = el }}
-                            style={{ position: "absolute", left: 0, top: 0, ...initStyles[i].slot }}
+                            onClick={() => props.onBookClick?.(i)}
+                            style={{ position: "absolute", left: 0, top: 0, pointerEvents: "auto", cursor: "pointer", ...initStyles[i].slot }}
+                            title={`Click to open Volume 0${i + 1} Interactive Folio`}
                         >
                             <div
                                 ref={(el) => { bookEls.current[i] = el }}
