@@ -18,78 +18,84 @@ interface Certificate {
   monogram: string
   artVariant: number
   skills: string[]
+  description?: string
 }
 
 const CERTIFICATES: Certificate[] = [
   {
-    title: "Deep Learning & Neural Architectures",
-    subtitle: "DeepLearning.AI · Distinction",
-    issuer: "DeepLearning.AI",
-    issueDate: "2025",
-    credentialId: "DL-NEURAL-8849",
-    label: "AI / ML",
-    spineColor: "#161B22",
-    textColor: "#F0F6FC",
-    coverColor: "#1B222E",
-    monogram: "AI",
-    artVariant: 0,
-    skills: ["Deep Neural Networks", "Transformers", "PyTorch", "Computer Vision", "Backpropagation"],
-  },
-  {
-    title: "Full-Stack Software Architecture",
-    subtitle: "Meta · Professional Certification",
-    issuer: "Meta",
-    issueDate: "2025",
-    credentialId: "META-FS-4921",
-    label: "ENGINEERING",
-    spineColor: "#24201C",
-    textColor: "#F5EBE1",
-    coverColor: "#2C2621",
+    title: "ForeSite: Safety & Risk AI",
+    subtitle: "Industrial Hazard Detection · Rank 25 BUSIH",
+    issuer: "Team ForeSite",
+    issueDate: "2026",
+    credentialId: "PROJ-FORESITE-26",
+    label: "AI SAFETY PLATFORM",
+    spineColor: "#141B2B",
+    textColor: "#F0F5FA",
+    coverColor: "#1A2438",
     monogram: "FS",
-    artVariant: 1,
-    skills: ["React & Next.js", "TypeScript", "REST & GraphQL APIs", "Distributed Systems", "SQL / NoSQL"],
+    artVariant: 0,
+    skills: ["Sentence Transformers", "XGBoost", "NLP Risk Classification", "Python", "MongoDB"],
+    description: "Developing an AI-driven platform to identify unsafe workplace conditions and potential hazards. Designed NLP-based risk classification and semantic assessment to prioritize critical industrial safety incident reports.",
   },
   {
-    title: "Algorithms & Computational Complexity",
-    subtitle: "Stanford Online · Advanced DSA",
-    issuer: "Stanford Online",
-    issueDate: "2024",
-    credentialId: "STAN-DSA-1082",
-    label: "ALGORITHMS",
-    spineColor: "#3A1F18",
-    textColor: "#FBF7F0",
-    coverColor: "#45251C",
-    monogram: "DSA",
-    artVariant: 2,
-    skills: ["Dynamic Programming", "Graph Theory", "Asymptotic Analysis", "Divide & Conquer", "Greedy Proofs"],
-  },
-  {
-    title: "Data Science & Statistical Inference",
-    subtitle: "IBM Professional · Specialization",
-    issuer: "IBM",
-    issueDate: "2024",
-    credentialId: "IBM-DS-7734",
-    label: "DATA SCIENCE",
-    spineColor: "#162820",
-    textColor: "#EAF5EF",
-    coverColor: "#1C3228",
-    monogram: "DS",
+    title: "Terraverify: Climate Engine",
+    subtitle: "Environmental Verification & Audit Platform",
+    issuer: "Environmental Verification",
+    issueDate: "2026",
+    credentialId: "PROJ-TERRA-02",
+    label: "CLIMATE INTELLIGENCE",
+    spineColor: "#122419",
+    textColor: "#EDF7F1",
+    coverColor: "#193323",
+    monogram: "TV",
     artVariant: 3,
-    skills: ["Predictive Modeling", "Exploratory Data Analysis", "Hypothesis Testing", "Pandas & NumPy", "Data Visualization"],
+    skills: ["Environmental Verification", "Scikit-Learn", "Python & Flask", "Data Integrity", "Audit Analytics"],
+    description: "Environmental verification and data integrity platform engineered to validate ecological benchmarks, sustainability claims, and sensor audit datasets using robust machine learning heuristics.",
   },
   {
-    title: "Blockchain & Cryptographic Consensus",
-    subtitle: "ConsenSys · Web3 Protocol Design",
-    issuer: "ConsenSys",
-    issueDate: "2024",
-    credentialId: "CS-WEB3-3051",
-    label: "BLOCKCHAIN",
-    spineColor: "#281D30",
-    textColor: "#F7EEFC",
-    coverColor: "#32233C",
-    monogram: "BC",
+    title: "Findify: Campus Lost & Found",
+    subtitle: "University Discovery & Retrieval System",
+    issuer: "Bennett Campus Ecosystem",
+    issueDate: "2025",
+    credentialId: "PROJ-FINDIFY-03",
+    label: "REALTIME WEB PLATFORM",
+    spineColor: "#301B14",
+    textColor: "#FBF3EE",
+    coverColor: "#3F231B",
+    monogram: "FD",
+    artVariant: 2,
+    skills: ["JavaScript (ES6+)", "Firebase Realtime DB", "HTML5 & Tailwind CSS", "Cloud Datastore", "Campus UX"],
+    description: "Developed a university-focused platform to streamline lost-and-found item reporting, image matching, and discovery. Integrated Google Firebase for real-time data sync and authenticated claiming workflows.",
+  },
+  {
+    title: "Academic Rigor: 9.81 CGPA",
+    subtitle: "Bennett University · School of CSE (AI Track)",
+    issuer: "Bennett University",
+    issueDate: "2025–2026",
+    credentialId: "HONOR-BU-981",
+    label: "ACADEMIC EXCELLENCE",
+    spineColor: "#211B29",
+    textColor: "#F7F0FB",
+    coverColor: "#2B2335",
+    monogram: "9.8",
     artVariant: 4,
-    skills: ["Smart Contracts", "Cryptographic Hashing", "Consensus Mechanisms", "Solidity", "Decentralized State"],
+    skills: ["Sem 1: 9.71 SGPA", "Sem 2: 9.91 SGPA", "Artificial Intelligence", "Data Structures", "Ranked Top Tier"],
+    description: "Maintained a top-tier academic benchmark with a 9.81/10 first-year CGPA in B.Tech Computer Science Engineering (Artificial Intelligence Specialization) at Bennett University.",
+  },
+  {
+    title: "BUSIH Hackathon Distinction",
+    subtitle: "National Level Innovation Showcase · Rank 25",
+    issuer: "BUSIH 2026 Council",
+    issueDate: "2026",
+    credentialId: "ACHV-BUSIH-25",
+    label: "COMPETITIVE HACK",
+    spineColor: "#2A1E14",
+    textColor: "#FDF6EE",
+    coverColor: "#372719",
+    monogram: "25",
+    artVariant: 1,
+    skills: ["Rank 25 Nationwide", "Rapid AI Prototyping", "NLP Risk Modeling", "Technical Pitch", "System Architecture"],
+    description: "Secured Rank 25 nationwide at the competitive Bennett University Student Innovation Hackathon (BUSIH 2026) with Team ForeSite, presenting real-time industrial hazard prediction.",
   },
 ]
 
@@ -154,7 +160,7 @@ export default function CertificatesSection() {
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-[#151412]/50">
-                  [04] Certified Distinctions
+                  [04] Project Folios &amp; Distinctions
                 </span>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#151412]/30" />
                 <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.18em] text-[#151412]/70">
@@ -162,7 +168,7 @@ export default function CertificatesSection() {
                 </span>
               </div>
               <h2 className="font-['Instrument_Serif'] text-3xl sm:text-4xl md:text-5xl text-[#151412] tracking-tight leading-none">
-                Certificates &amp; Specializations
+                Curated Project Folios &amp; Accreditations
               </h2>
             </div>
 
@@ -267,17 +273,17 @@ export default function CertificatesSection() {
 
       {/* ── Complete Verification Ledger (Below the pinned scroll experience) ── */}
       <div className="max-w-7xl mx-auto py-16 px-4 sm:px-8 md:px-12 lg:px-16 border-t border-[#151412]/15">
-        <div className="flex items-center justify-between border-b border-[#151412]/15 pb-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-[#151412]/15 pb-4 mb-8 gap-2">
           <div>
             <h3 className="font-['Instrument_Serif'] text-2xl sm:text-3xl text-[#151412]">
-              Complete Accredited Ledger &amp; Competencies
+              Complete Project Ledger &amp; Proven Competencies
             </h3>
             <p className="text-xs text-[#151412]/60 font-mono mt-1">
-              Full specification of verified credentials across all 5 disciplines.
+              Full specification of verified projects, competitive distinctions, and engineering benchmarks.
             </p>
           </div>
-          <span className="text-xs font-mono uppercase tracking-widest text-[#151412]/40 hidden sm:inline">
-            5 of 5 Verified
+          <span className="text-xs font-mono uppercase tracking-widest text-[#151412]/50">
+            5 Curated Volumes
           </span>
         </div>
 
@@ -312,9 +318,15 @@ export default function CertificatesSection() {
                 <h4 className="font-['Instrument_Serif'] text-2xl text-[#151412] leading-snug">
                   {cert.title}
                 </h4>
-                <p className="mt-1 text-xs text-[#151412]/70 font-mono">
+                <p className="mt-1 text-xs text-[#151412]/70 font-mono font-medium">
                   {cert.subtitle}
                 </p>
+
+                {cert.description && (
+                  <p className="mt-3 text-xs text-[#151412]/75 leading-relaxed font-light">
+                    {cert.description}
+                  </p>
+                )}
               </div>
 
               <div className="mt-6 pt-4 border-t border-[#151412]/10">
@@ -333,31 +345,31 @@ export default function CertificatesSection() {
                   <span>ID: {cert.credentialId}</span>
                   <span className="text-emerald-700 font-medium flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block" />
-                    Verified
+                    Verified Archive
                   </span>
                 </div>
               </div>
             </div>
           ))}
 
-          {/* Academic Standing Summary Card */}
+          {/* Academic & Engineering Standing Summary Card */}
           <div className="p-6 bg-[#151412] text-[#EEEAE3] rounded-xl flex flex-col justify-between border border-[#151412]">
             <div>
               <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#EEEAE3]/60 block mb-2">
-                Cumulative Rigor
+                Engineering Synthesis
               </span>
               <h4 className="font-['Instrument_Serif'] text-3xl italic text-[#EEEAE3] leading-tight">
-                Academic &amp; Practical Synchrony
+                Analytical Rigor &amp; Practical Execution
               </h4>
               <p className="mt-3 text-xs text-[#EEEAE3]/70 font-light leading-relaxed">
-                These certifications complement the academic benchmark of a <strong>9.81 CGPA</strong> at Bennett University, grounding theoretical computer science in industry-standard frameworks.
+                Bridging academic excellence (<strong>9.81 CGPA</strong> at Bennett University) with production-ready AI/ML pipelines (<strong>ForeSite</strong>), environmental platforms (<strong>Terraverify</strong>), and community leadership at the <strong>Indian Blockchain Fraternity</strong>.
               </p>
             </div>
 
             <div className="mt-6 pt-4 border-t border-[#EEEAE3]/20 flex items-center justify-between text-xs font-mono">
-              <span className="text-[#EEEAE3]/60">Ranked Top Tier</span>
+              <span className="text-[#EEEAE3]/60">Greater Noida, India</span>
               <span className="px-2.5 py-1 bg-[#EEEAE3]/10 border border-[#EEEAE3]/20 rounded text-[#EEEAE3]">
-                B.Tech CSE · 2026
+                B.Tech CSE (AI) · 2029
               </span>
             </div>
           </div>

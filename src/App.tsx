@@ -4,6 +4,8 @@ import HeroSection from "./components/HeroSection"
 import AcademicSection from "./components/AcademicSection"
 import SpecializationsSection from "./components/SpecializationsSection"
 import CertificatesSection from "./components/CertificatesSection"
+import LeadershipSection from "./components/LeadershipSection"
+import ContactSection from "./components/ContactSection"
 import { type ClayRobotRef } from "./components/ClayRobot"
 import Lenis from "lenis"
 import gsap from "gsap"
@@ -51,7 +53,11 @@ export default function App() {
 
   const navigateToSection = (targetId: string) => {
     robotRef.current?.triggerWave(1)
-    lenisRef.current?.scrollTo(`#${targetId}`, { offset: 0, duration: 1.4 })
+    if (targetId === "top" || targetId === "hero") {
+      lenisRef.current?.scrollTo(0, { duration: 1.5 })
+    } else {
+      lenisRef.current?.scrollTo(`#${targetId}`, { offset: 0, duration: 1.4 })
+    }
   }
 
   return (
@@ -66,56 +72,41 @@ export default function App() {
       {/* 2. Main Website (Directly under loader, no intermediate shutter/button) */}
       <main className="relative">
         {/* Section [01]: Hero Profile with Clay Robot level with name */}
-        <HeroSection 
-          robotRef={robotRef}
-          isLoaded={isLoaded}
-          onNavigate={navigateToSection}
-          onExploreClick={() => navigateToSection("academics")}
-        />
+        <div id="hero">
+          <HeroSection 
+            robotRef={robotRef}
+            isLoaded={isLoaded}
+            onNavigate={navigateToSection}
+            onExploreClick={() => navigateToSection("academics")}
+          />
+        </div>
 
-        {/* Section [02]: Academic Foundation (9.81 CGPA animated scrub) */}
+        {/* Section [02]: Academic Foundation (9.81 CGPA & Schooling Excellence) */}
         <div id="academics">
           <AcademicSection />
         </div>
 
-        {/* Section [03]: Technical Domains (Horizontal pinned track) */}
+        {/* Section [03]: Technical Domains (Interactive 3D Skill Pillars) */}
         <div id="specializations">
           <SpecializationsSection />
         </div>
 
-        {/* Section [04]: Certified Distinctions (3D Bookshelf Cover Flip) */}
-        <div id="certificates">
-          <CertificatesSection />
+        {/* Section [04]: Project Folios & Distinctions (3D Bookshelf Cover Flip & Complete Ledger) */}
+        <div id="projects">
+          <div id="certificates">
+            <CertificatesSection />
+          </div>
         </div>
 
-        {/* Section [05]: Next Chapter Prompt */}
-        <section className="min-h-[45vh] sm:min-h-[50vh] flex flex-col justify-between p-5 sm:p-12 md:p-16 border-t border-[#151412]/15 bg-[#EEEAE3] overflow-hidden">
-          <div className="my-auto py-8 sm:py-12 text-center max-w-2xl mx-auto">
-            <span className="text-[10px] sm:text-xs uppercase tracking-[0.25em] sm:tracking-[0.3em] text-[#151412]/50 block mb-3 sm:mb-4">
-              Continuous Scroll Sequence
-            </span>
-            <h2 className="font-['Instrument_Serif'] text-3xl sm:text-4xl md:text-6xl italic leading-tight text-[#151412]">
-              "Merging analytical rigor with software craftsmanship."
-            </h2>
-            <div className="mt-6 sm:mt-8 flex justify-center gap-4">
-              <button
-                type="button"
-                onClick={() => {
-                  robotRef.current?.triggerWave(1)
-                  lenisRef.current?.scrollTo(0, { duration: 1.5 })
-                }}
-                className="px-4 py-2 border border-[#151412]/20 hover:border-[#151412] hover:bg-[#151412] hover:text-[#EEEAE3] transition-all rounded-full text-[10px] sm:text-xs uppercase tracking-widest cursor-pointer font-medium active:scale-95"
-              >
-                ↑ Return to top &amp; greet companion
-              </button>
-            </div>
-          </div>
+        {/* Section [05]: Leadership & Experience (IBF Vice Chairperson & APS Head Boy) */}
+        <div id="leadership">
+          <LeadershipSection />
+        </div>
 
-          <div className="flex flex-wrap justify-between items-center text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#151412]/50 border-t border-[#151412]/15 pt-3 sm:pt-4 gap-2">
-            <span>Saurabh Tewari · 2026</span>
-            <span>Bennett University CSE</span>
-          </div>
-        </section>
+        {/* Section [06]: Contact & Direct Dispatch */}
+        <div id="contact">
+          <ContactSection onBackToTop={() => navigateToSection("top")} />
+        </div>
       </main>
     </div>
   )

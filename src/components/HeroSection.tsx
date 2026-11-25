@@ -63,24 +63,42 @@ export default function HeroSection({ robotRef, isLoaded = false, onNavigate, on
         <header className="hero-stagger flex flex-wrap justify-between items-center text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.22em] border-b border-[#151412]/15 pb-3 sm:pb-4 gap-2 sm:gap-3">
           <div className="flex items-center gap-2 sm:gap-3">
             <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse shrink-0" />
-            <span className="font-medium text-[#151412] truncate">Bennett University, Greater Noida</span>
+            <span className="font-medium text-[#151412] truncate">Greater Noida, Uttar Pradesh, India</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4 text-[#151412]/70 font-mono text-[10px] sm:text-[11px]">
-            <span>2nd Year · B.Tech CSE</span>
+            <span>Bennett University · B.Tech CSE (AI)</span>
             <span className="px-2 py-0.5 bg-[#151412]/5 border border-[#151412]/15 rounded text-[#151412] font-semibold">
               CGPA 9.81
             </span>
           </div>
         </header>
 
-        {/* Category Pill */}
-        <div className="hero-stagger flex justify-between items-center mt-4 sm:mt-6">
-          <span className="inline-flex items-center gap-2 px-3 py-1 bg-[#151412]/5 border border-[#151412]/10 rounded-full text-[10px] sm:text-[11px] uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#151412]/70 font-medium">
-            Computer Science Engineering Student
-          </span>
-          <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.25em] text-[#151412]/40 hidden sm:inline font-mono">
-            Vol. 01 · 2026
-          </span>
+        {/* Category Pill & Contact Chips */}
+        <div className="hero-stagger flex flex-wrap justify-between items-center gap-2 mt-4 sm:mt-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-2 px-3 py-1 bg-[#151412]/5 border border-[#151412]/10 rounded-full text-[10px] sm:text-[11px] uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#151412]/70 font-medium">
+              Artificial Intelligence Undergraduate · 2025–2029
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#151412]/[0.03] border border-[#151412]/10 rounded-full text-[10px] sm:text-[11px] font-mono text-[#151412]/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#151412]/40" />
+              Vice Chairperson · Indian Blockchain Fraternity
+            </span>
+          </div>
+          <div className="flex items-center gap-3 text-[10px] sm:text-[11px] font-mono text-[#151412]/60">
+            <a 
+              href="mailto:saurabhtewari377@gmail.com" 
+              className="hover:text-[#151412] hover:underline transition-colors"
+            >
+              saurabhtewari377@gmail.com
+            </a>
+            <span className="hidden sm:inline text-[#151412]/30">·</span>
+            <a 
+              href="tel:+919410337297" 
+              className="hidden sm:inline hover:text-[#151412] hover:underline transition-colors"
+            >
+              +91 9410337297
+            </a>
+          </div>
         </div>
       </div>
 
@@ -187,46 +205,66 @@ export default function HeroSection({ robotRef, isLoaded = false, onNavigate, on
           {/* Statement & Description */}
           <div className="md:col-span-8">
             <p className="text-lg sm:text-xl md:text-2xl font-['Instrument_Serif'] leading-snug text-[#151412]">
-              "Computer Science Student <span className="text-[#151412]/30">|</span> AI/ML Enthusiast <span className="text-[#151412]/30">|</span> Full-Stack Developer"
+              "Curious and driven Computer Science undergraduate passionate about solving real-world problems through technology."
             </p>
-            <p className="mt-1.5 sm:mt-2 text-xs md:text-sm text-[#151412]/70 font-light leading-relaxed max-w-2xl">
-              Second-year B.Tech undergraduate at Bennett University with a 9.81 CGPA foundation. Focused on architecting intelligent algorithms, scalable software systems, and data-driven solutions.
+            <p className="mt-1.5 sm:mt-2 text-xs md:text-sm text-[#151412]/75 font-light leading-relaxed max-w-2xl">
+              Specializing in Artificial Intelligence at Bennett University with a top-tier <strong>9.81 CGPA</strong> foundation. Focused on building practical machine learning models, NLP risk systems (<span className="text-[#151412] font-medium">ForeSite</span>), environmental verification tools (<span className="text-[#151412] font-medium">Terraverify</span>), and campus solutions (<span className="text-[#151412] font-medium">Findify</span>). Serving as Vice Chairperson at the Indian Blockchain Fraternity.
             </p>
 
             {/* Direct Jump Navigation Buttons */}
-            <div className="mt-4 sm:mt-5 flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="mt-4 sm:mt-5 flex flex-wrap items-center gap-2 sm:gap-2.5">
               <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-[#151412]/50 mr-1 font-mono block w-full sm:w-auto">Direct jump:</span>
               <button
                 type="button"
                 onClick={() => handleNavClick("academics")}
                 className="px-3 py-1.5 border border-[#151412]/20 hover:border-[#151412] hover:bg-[#151412] hover:text-[#EEEAE3] transition-all rounded-full text-[11px] sm:text-xs uppercase tracking-wider cursor-pointer font-medium active:scale-95"
               >
-                [02] Academic Foundation (9.81 CGPA) →
+                [02] Academic Rigor (9.81 CGPA) →
               </button>
               <button
                 type="button"
                 onClick={() => handleNavClick("specializations")}
                 className="px-3 py-1.5 border border-[#151412]/20 hover:border-[#151412] hover:bg-[#151412] hover:text-[#EEEAE3] transition-all rounded-full text-[11px] sm:text-xs uppercase tracking-wider cursor-pointer font-medium active:scale-95"
               >
-                [03] Technical Domains →
+                [03] Technical Arsenal →
               </button>
               <button
                 type="button"
-                onClick={() => handleNavClick("certificates")}
+                onClick={() => handleNavClick("projects")}
                 className="px-3 py-1.5 border border-[#151412]/20 hover:border-[#151412] hover:bg-[#151412] hover:text-[#EEEAE3] transition-all rounded-full text-[11px] sm:text-xs uppercase tracking-wider cursor-pointer font-medium active:scale-95"
               >
-                [04] Certifications →
+                [04] Project Folios (3D Bookshelf) →
+              </button>
+              <button
+                type="button"
+                onClick={() => handleNavClick("leadership")}
+                className="px-3 py-1.5 border border-[#151412]/20 hover:border-[#151412] hover:bg-[#151412] hover:text-[#EEEAE3] transition-all rounded-full text-[11px] sm:text-xs uppercase tracking-wider cursor-pointer font-medium active:scale-95"
+              >
+                [05] Leadership &amp; Roles →
+              </button>
+              <button
+                type="button"
+                onClick={() => handleNavClick("contact")}
+                className="px-3 py-1.5 border border-[#151412]/20 hover:border-[#151412] hover:bg-[#151412] hover:text-[#EEEAE3] transition-all rounded-full text-[11px] sm:text-xs uppercase tracking-wider cursor-pointer font-medium active:scale-95"
+              >
+                [06] Contact &amp; Dispatch →
               </button>
             </div>
           </div>
 
           {/* Quick Metrics on the Right */}
-          <div className="md:col-span-4 flex flex-row md:flex-col gap-2 justify-between md:items-end text-[11px] sm:text-xs font-mono text-[#151412]/60">
-            <div className="px-3 py-1 sm:px-3.5 sm:py-1.5 border border-[#151412]/15 rounded w-fit bg-[#151412]/[0.02]">
-              1st Year: <strong className="text-[#151412]">9.81 / 10</strong>
+          <div className="md:col-span-4 flex flex-col gap-2 justify-between md:items-end text-[11px] sm:text-xs font-mono text-[#151412]/60">
+            <div className="px-3.5 py-1.5 border border-[#151412]/15 rounded w-fit bg-[#151412]/[0.02] text-right">
+              Bennett University: <strong className="text-[#151412]">9.81 / 10 CGPA</strong>
+              <div className="text-[10px] text-[#151412]/50 font-normal">Sem 1: 9.71 · Sem 2: 9.91</div>
             </div>
-            <div className="px-3 py-1 sm:px-3.5 sm:py-1.5 border border-[#151412]/15 rounded w-fit bg-[#151412]/[0.02]">
-              Sem 1: <strong>9.71</strong> · Sem 2: <strong>9.91</strong>
+            <div className="px-3.5 py-1.5 border border-[#151412]/15 rounded w-fit bg-[#151412]/[0.02] text-right">
+              Army Public School: <strong className="text-[#151412]">94.4% (XII)</strong>
+              <div className="text-[10px] text-[#151412]/50 font-normal">Class X: 95.2% · CBSE Distinction</div>
+            </div>
+            <div className="px-3.5 py-1.5 border border-[#151412]/15 rounded w-fit bg-[#151412]/[0.02] text-right">
+              BUSIH Hackathon 2026: <strong className="text-[#151412]">Rank 25</strong>
+              <div className="text-[10px] text-[#151412]/50 font-normal">Team ForeSite · Industrial Safety AI</div>
             </div>
           </div>
 
