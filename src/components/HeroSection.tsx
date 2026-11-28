@@ -62,7 +62,6 @@ export default function HeroSection({ robotRef, isLoaded = false, onNavigate, on
       <div>
         <header className="hero-stagger flex flex-wrap justify-between items-center text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.22em] border-b border-[#151412]/15 pb-3 sm:pb-4 gap-2 sm:gap-3">
           <div className="flex items-center gap-2 sm:gap-3">
-            <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse shrink-0" />
             <span className="font-medium text-[#151412] truncate">Greater Noida, Uttar Pradesh, India</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4 text-[#151412]/70 font-mono text-[10px] sm:text-[11px]">
@@ -78,10 +77,6 @@ export default function HeroSection({ robotRef, isLoaded = false, onNavigate, on
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-2 px-3 py-1 bg-[#151412]/5 border border-[#151412]/10 rounded-full text-[10px] sm:text-[11px] uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#151412]/70 font-medium">
               Artificial Intelligence Undergraduate · 2025–2029
-            </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#151412]/[0.03] border border-[#151412]/10 rounded-full text-[10px] sm:text-[11px] font-mono text-[#151412]/60">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#151412]/40" />
-              Vice Chairperson · Indian Blockchain Fraternity
             </span>
           </div>
           <div className="flex items-center gap-3 text-[10px] sm:text-[11px] font-mono text-[#151412]/60">
@@ -198,10 +193,20 @@ export default function HeroSection({ robotRef, isLoaded = false, onNavigate, on
           {/* Statement & Description */}
           <div className="md:col-span-8">
             <p className="text-lg sm:text-xl md:text-2xl font-['Instrument_Serif'] leading-snug text-[#151412]">
-              "Curious and driven Computer Science undergraduate passionate about solving real-world problems through technology."
+              <b>"Ideas are cheap. Building them is the fun part."</b>
+            </p>
+            <p className="text-lg sm:text-xl md:text-2xl font-['Instrument_Serif'] leading-snug text-[#151412]">
+              Hey, I'm Saurabh.
+              </p>
+              <p className="text-lg sm:text-xl md:text-2xl font-['Instrument_Serif'] leading-snug text-[#151412]">
+Currently a Computer Science Undergrad at Bennett University.
+
+I write code, experiment with AI, and build software, sometimes with a plan, or maybe... even without one, just with way... too many open tabs.
+
+Always curious about what's possible.
             </p>
             <p className="mt-1.5 sm:mt-2 text-xs md:text-sm text-[#151412]/75 font-light leading-relaxed max-w-2xl">
-              Specializing in Artificial Intelligence at Bennett University with a rigorous computational foundation. Focused on building practical machine learning models, NLP risk systems (<span className="text-[#151412] font-medium">ForeSite</span>), environmental verification tools (<span className="text-[#151412] font-medium">Terraverify</span>), and campus solutions (<span className="text-[#151412] font-medium">Findify</span>). Serving as Vice Chairperson at the Indian Blockchain Fraternity.
+              Specializing in Artificial Intelligence with a rigorous computational foundation. Focused on building practical machine learning models, NLP risk systems, environmental verification tools, and campus solutions. Serving as Vice Chairperson at the Indian Blockchain Fraternity.
             </p>
 
             {/* Direct Jump Navigation Buttons */}
@@ -226,7 +231,7 @@ export default function HeroSection({ robotRef, isLoaded = false, onNavigate, on
                 onClick={() => handleNavClick("projects")}
                 className="px-3 py-1.5 border border-[#151412]/20 hover:border-[#151412] hover:bg-[#151412] hover:text-[#EEEAE3] transition-all rounded-full text-[11px] sm:text-xs uppercase tracking-wider cursor-pointer font-medium active:scale-95"
               >
-                [04] Project Folios (3D Bookshelf) →
+                [04] Project Folios →
               </button>
               <button
                 type="button"
@@ -245,27 +250,13 @@ export default function HeroSection({ robotRef, isLoaded = false, onNavigate, on
             </div>
           </div>
 
-          {/* Quick Metrics on the Right */}
-          <div className="md:col-span-4 flex flex-col gap-2 justify-between md:items-end text-[11px] sm:text-xs font-mono text-[#151412]/60">
-            <div className="px-3.5 py-1.5 border border-[#151412]/15 rounded w-fit bg-[#151412]/[0.02] text-right">
-              Bennett University: <strong className="text-[#151412]">B.Tech CSE (AI)</strong>
-              <div className="text-[10px] text-[#151412]/50 font-normal">Artificial Intelligence Specialization · 2029</div>
-            </div>
-            <div className="px-3.5 py-1.5 border border-[#151412]/15 rounded w-fit bg-[#151412]/[0.02] text-right">
-              Army Public School: <strong className="text-[#151412]">94.4% (XII) · 95.2% (X)</strong>
-              <div className="text-[10px] text-[#151412]/50 font-normal">CBSE Board Distinction · Former Head Boy</div>
-            </div>
-            <div className="px-3.5 py-1.5 border border-[#151412]/15 rounded w-fit bg-[#151412]/[0.02] text-right">
-              BUSIH Hackathon 2026: <strong className="text-[#151412]">Rank 25 Nationwide</strong>
-              <div className="text-[10px] text-[#151412]/50 font-normal">Team ForeSite · Industrial Safety AI</div>
-            </div>
-          </div>
+          
 
         </div>
 
         {/* Footer Scroll Prompt */}
         <footer className="hero-stagger flex flex-wrap justify-between items-center text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.25em] border-t border-[#151412]/15 pt-3 sm:pt-4 mt-4 sm:mt-6 gap-2">
-          <span>Portfolio 2026 · Index [01]</span>
+          <span>Portfolio · Index [01]</span>
           <button 
             type="button"
             onClick={() => {
