@@ -193,12 +193,12 @@ export default function HeroSection({ robotRef, isLoaded = false, onNavigate, on
           {/* Statement & Description */}
           <div className="md:col-span-8">
             <p className="text-lg sm:text-xl md:text-2xl font-['Instrument_Serif'] leading-snug text-[#151412]">
-              <b>"Ideas are cheap. Building them is the fun part."</b>
+              "Ideas are cheap. Building them is the fun part."
             </p>
-            <p className="text-lg sm:text-xl md:text-2xl font-['Instrument_Serif'] leading-snug text-[#151412]">
+            <p className="text-m sm:text-m md:text-xl font-['Instrument_Serif'] leading-snug text-[#151412]">
               Hey, I'm Saurabh.
               </p>
-              <p className="text-lg sm:text-xl md:text-2xl font-['Instrument_Serif'] leading-snug text-[#151412]">
+              <p className="text-m sm:text-m md:text-xl font-['Instrument_Serif'] leading-snug text-[#151412]">
 Currently a Computer Science Undergrad at Bennett University.
 
 I write code, experiment with AI, and build software, sometimes with a plan, or maybe... even without one, just with way... too many open tabs.
