@@ -23,7 +23,7 @@ const TECH_PILLARS: TechSkillSlide[] = [
       },
     ],
     tags: ["Machine Learning", "Sentence Transformers", "XGBoost", "NLP Risk Classification"],
-    metrics: "ForeSite & Terraverify Core · Bennett AI Track",
+    
   },
   {
     num: "02",
@@ -47,7 +47,7 @@ const TECH_PILLARS: TechSkillSlide[] = [
       },
     ],
     tags: ["Tailwind CSS", "JavaScript", "Flask", "Full-Stack Architecture"],
-    metrics: "Findify & Modern Web Applications",
+    
   },
   {
     num: "03",
@@ -71,7 +71,7 @@ const TECH_PILLARS: TechSkillSlide[] = [
       },
     ],
     tags: ["C++", "Python", "DSA", "Algorithmic Precision"],
-    metrics: "Algorithmic Rigor · Bennett AI Track",
+    
   },
   {
     num: "04",
@@ -95,7 +95,7 @@ const TECH_PILLARS: TechSkillSlide[] = [
       },
     ],
     tags: ["MongoDB", "Firebase", "NoSQL", "Cloud Persistence"],
-    metrics: "Findify & ForeSite Backend Foundation",
+   
   },
   {
     num: "05",
@@ -107,7 +107,7 @@ const TECH_PILLARS: TechSkillSlide[] = [
     coreSkills: [
       {
         category: "Blockchain Knowledge",
-        items: ["Decentralized Ledgers", "Consensus Fundamentals", "Cryptographic Hashing", "Smart Contract Concepts", "Web3 Protocols"],
+        items: ["Decentralized Ledgers", "Consensus Fundamentals", "Cryptographic Hashing", "Smart Contract Concepts"],
       },
       {
         category: "Initiatives & Direction",
@@ -119,7 +119,7 @@ const TECH_PILLARS: TechSkillSlide[] = [
       },
     ],
     tags: ["Indian Blockchain Fraternity", "Vice Chairperson", "Decentralized Tech", "Leadership"],
-    metrics: "Vice Chairperson (IBF) · Bennett University",
+    
   },
 ]
 
