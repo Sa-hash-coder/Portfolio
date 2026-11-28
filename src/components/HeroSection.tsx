@@ -79,12 +79,21 @@ export default function HeroSection({ robotRef, isLoaded = false, onNavigate, on
               Artificial Intelligence Undergraduate · 2025–2029
             </span>
           </div>
-          <div className="flex items-center gap-3 text-[10px] sm:text-[11px] font-mono text-[#151412]/60">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[10px] sm:text-[11px] font-mono text-[#151412]/60">
             <a 
               href="mailto:saurabhtewari377@gmail.com" 
               className="hover:text-[#151412] hover:underline transition-colors"
             >
               saurabhtewari377@gmail.com
+            </a>
+            <span className="text-[#151412]/30">·</span>
+            <a 
+              href="https://github.com/Sa-hash-coder"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[#151412] hover:underline transition-colors"
+            >
+              github.com/Sa-hash-coder ↗
             </a>
           </div>
         </div>
