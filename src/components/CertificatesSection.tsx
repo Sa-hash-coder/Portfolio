@@ -69,34 +69,34 @@ const CERTIFICATES: Certificate[] = [
     description: "Developed a university-focused platform to streamline lost-and-found item reporting, image matching, and discovery. Integrated Google Firebase for real-time data sync and authenticated claiming workflows.",
   },
   {
-    title: "Foundational AI & Systems Research",
-    subtitle: "Bennett University · School of CSE",
-    issuer: "Bennett University",
-    issueDate: "2025–2026",
-    credentialId: "ACAD-AI-RESEARCH",
-    label: "AI FOUNDATIONS",
+    title: "NanoVCS: Lightweight VCS",
+    subtitle: "Custom Git Internals in Java · CLI & Web DAG",
+    issuer: "First-Principles Systems",
+    issueDate: "2026",
+    credentialId: "PROJ-NANOVCS-04",
+    label: "SYSTEMS ENGINEERING",
     spineColor: "#211B29",
     textColor: "#F7F0FB",
     coverColor: "#2B2335",
-    monogram: "AI",
-    artVariant: 4,
-    skills: ["Artificial Intelligence Track", "Deep Learning Foundations", "Data Structures", "Discrete Mathematics", "Systems Architecture"],
-    description: "Advanced coursework and core research in Artificial Intelligence, Neural Systems, and Computational Mathematics within the School of Computer Science Engineering at Bennett University.",
+    monogram: "NV",
+    artVariant: 3,
+    skills: ["Java", "SHA-256 Storage", "DAG Architecture", "Java HTTP Server", "Tailwind CSS & Vis.js"],
+    description: "Custom version control system engineered in Java to replicate core Git internals from the ground up, pairing a CLI tool (init, add, commit, log, branching) with a browser-based repository visualizer.",
   },
   {
-    title: "BUSIH Hackathon Distinction",
-    subtitle: "National Level Innovation Showcase · Rank 25",
-    issuer: "BUSIH 2026 Council",
+    title: "ForestFireWatch",
+    subtitle: "Wildfire Risk Prediction & Environmental Monitoring",
+    issuer: "Climate Tech · SDG 13 & 15",
     issueDate: "2026",
-    credentialId: "ACHV-BUSIH-25",
-    label: "COMPETITIVE HACK",
+    credentialId: "PROJ-FFW-05",
+    label: "ENVIRONMENTAL AI",
     spineColor: "#2A1E14",
     textColor: "#FDF6EE",
     coverColor: "#372719",
-    monogram: "25",
-    artVariant: 1,
-    skills: ["Rank 25 Nationwide", "Rapid AI Prototyping", "NLP Risk Modeling", "Technical Pitch", "System Architecture"],
-    description: "Secured Rank 25 nationwide at the competitive Bennett University Student Innovation Hackathon (BUSIH 2026) with Team ForeSite, presenting real-time industrial hazard prediction.",
+    monogram: "FW",
+    artVariant: 0,
+    skills: ["Python", "Scikit-learn", "Pandas & NumPy", "NASA FIRMS & ERA5", "Matplotlib & Seaborn"],
+    description: "Wildfire prediction system combining NASA FIRMS satellite fire observations and ERA5 meteorological data to estimate fire likelihood, analyze geospatial grid cells, and visualize risk heatmaps.",
   },
 ]
 
@@ -213,7 +213,7 @@ export default function CertificatesSection() {
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-[#151412]/50">
-                  [04] Project Folios &amp; Distinctions
+                  [04] Selected Engineering Projects
                 </span>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#151412]/30" />
                 <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.18em] text-[#151412]/70">
@@ -221,7 +221,7 @@ export default function CertificatesSection() {
                 </span>
               </div>
               <h2 className="font-['Instrument_Serif'] text-3xl sm:text-4xl md:text-5xl text-[#151412] tracking-tight leading-none">
-                Curated Project Folios &amp; Accreditations
+                Curated Project Folios
               </h2>
             </div>
 
@@ -343,10 +343,10 @@ export default function CertificatesSection() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-[#151412]/15 pb-4 mb-8 gap-2">
           <div>
             <h3 className="font-['Instrument_Serif'] text-2xl sm:text-3xl text-[#151412]">
-              Complete Project Ledger &amp; Proven Competencies
+              Complete Project Ledger &amp; Engineering Specs
             </h3>
             <p className="text-xs text-[#151412]/60 font-mono mt-1">
-              Full specification of verified projects, competitive distinctions, and engineering benchmarks.
+              Full specification of engineered systems, machine learning pipelines, and interactive platforms.
             </p>
           </div>
           <span className="text-xs font-mono uppercase tracking-widest text-[#151412]/50">

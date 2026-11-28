@@ -101,46 +101,46 @@ const EXTENDED_DETAILS: Record<number, {
   },
   3: {
     overview:
-      "An intensive academic program within the School of Computer Science Engineering at Bennett University, focusing on Artificial Intelligence, Neural Paradigms, Discrete Mathematics, and High-Performance Systems.",
+      "NanoVCS is a custom version control system engineered in Java to replicate core Git internals from the ground up. Designed to explore content-addressable storage, graph-based commit tracking, and custom HTTP serving without relying on third-party backend frameworks, it pairs a CLI tool (init, add, commit, log, branching) with a browser-based repository visualizer.",
     problemSolved:
-      "Bridging pure theoretical computer science with applied machine learning engineering, mastering algorithmic proof methods, discrete graph formulations, and modern neural architectures.",
+      "Most developers use Git as a black box without seeing how snapshots, diffs, and commit graphs work under the hood. NanoVCS rebuilds those internals from first principles with an interactive visual inspector.",
     architecture:
-      "Comprehensive curriculum spanning C++ object-oriented discipline, Python scientific frameworks (NumPy, pandas, Scikit-learn), asymptotic computational complexity, and modern AI engineering.",
+      "Java core engine implementing SHA-256 content-addressable object storage and a Directed Acyclic Graph (DAG) commit history with HEAD pointer tracking, paired with a built-in Java HTTP server serving a Tailwind CSS and Vis.js web dashboard.",
     keyHighlights: [
-      "Deep grounding in C++ memory management, pointers, and object-oriented architectures.",
-      "Rigorous mastery of data structures: Segment Trees, Heaps, Graph traversals, and Dynamic Programming.",
-      "Artificial Intelligence track curriculum emphasizing deep learning and neural models.",
-      "Executive technical engagement as Vice Chairperson of the Indian Blockchain Fraternity.",
+      "Content-Addressable Storage: SHA-256 cryptographic hashing to deduplicate file snapshots and guarantee commit integrity.",
+      "DAG Commit & Branch Architecture: Non-linear branching, HEAD pointer tracking, and traversal across commit ancestors.",
+      "Line-by-Line Diff Engine: Custom file comparison algorithm computing additions, deletions, and modifications between revisions.",
+      "Framework-Free Local Web Dashboard: Built-in Java HTTP server with Tailwind CSS and Vis.js to interactively render the commit DAG and file diffs.",
     ],
-    metrics: "Top-Tier University Academic Distinction · B.Tech CSE (AI Specialization · 2029).",
-    quote: "Developing the mathematical and algorithmic rigor essential for next-generation intelligence systems.",
+    metrics: "Built from first principles in Java · CLI + Framework-Free Web DAG Visualizer.",
+    quote: "Replicating core Git internals from first principles — content-addressable storage to live DAG visualization.",
     specs: [
-      { label: "Institution", value: "Bennett University, Greater Noida" },
-      { label: "Program", value: "B.Tech Computer Science Engineering" },
-      { label: "Specialization", value: "Artificial Intelligence" },
-      { label: "Graduation", value: "Class of 2029" },
+      { label: "System Type", value: "Lightweight Version Control System" },
+      { label: "Core Language", value: "Java (Framework-Free)" },
+      { label: "Storage & Graph", value: "SHA-256 Object Store + DAG" },
+      { label: "Web Visualizer", value: "Java HTTP Server + Tailwind + Vis.js" },
     ],
   },
   4: {
     overview:
-      "Nationwide competitive hackathon achievement at the Bennett University Student Innovation Hackathon (BUSIH 2026), where Team ForeSite designed, built, and defended an end-to-end industrial hazard prediction engine.",
+      "ForestFireWatch is a software-based wildfire prediction system that uses satellite-based fire observations and historical weather patterns to identify potential wildfire activity. By combining NASA FIRMS and ERA5 meteorological data, it explores how environmental conditions and geographical patterns predict wildfire occurrences.",
     problemSolved:
-      "Rapidly conceptualizing, training, and deploying a functional AI safety architecture under extreme 24-48 hour hackathon time constraints while maintaining system robustness and high predictive accuracy.",
+      "Late wildfire detection leaves emergency responders reacting after fires escalate. ForestFireWatch models meteorological and satellite signals across grid cells to forecast fire risk before ignition.",
     architecture:
-      "Fast-paced sprint integrating Python NLP models, Sentence Transformers, XGBoost classification, and live MongoDB persistence, presented to a panel of senior faculty and industry engineering judges.",
+      "Python machine learning pipeline ingesting NASA FIRMS fire observations and ERA5 weather variables (temperature, precipitation, wind) with Pandas and NumPy, training Scikit-learn classification models evaluated via classification metrics and visualized with Matplotlib and Seaborn.",
     keyHighlights: [
-      "Secured Rank 25 among competitive nationwide engineering teams.",
-      "Engineered real-time NLP classification models for industrial incident telemetry.",
-      "Delivered high-stakes technical architecture pitch and live prototype demonstration.",
-      "Collaborative teamwork under pressure, demonstrating technical agility and leadership.",
+      "Wildfire Prediction: Machine learning classification models estimating the likelihood of fire occurrence.",
+      "Environmental & Geospatial Analysis: Processes temperature, precipitation, and wind across geographical grid cells.",
+      "Risk Visualization: Presents fire-risk patterns through heatmaps, graphs, and geographical visualizations.",
+      "Model Evaluation & SDG Alignment: Compares ML models using classification metrics; aligned with SDG 13 (Climate Action) & SDG 15 (Life on Land).",
     ],
-    metrics: "Rank 25 Nationwide distinction · Bennett University Student Innovation Hack 2026.",
-    quote: "Demonstrating rapid prototyping, high-pressure execution, and collaborative engineering excellence.",
+    metrics: "Machine Learning · Climate Tech · SDG 13 & SDG 15 Aligned.",
+    quote: "Predicting tomorrow's fire risk using today's environmental data.",
     specs: [
-      { label: "Hackathon", value: "BUSIH Hackathon 2026" },
-      { label: "Standing", value: "Rank 25 Nationwide" },
-      { label: "Project", value: "ForeSite: Safety & Risk AI" },
-      { label: "Team", value: "Team ForeSite" },
+      { label: "Category", value: "Machine Learning · Environmental AI" },
+      { label: "Data Sources", value: "NASA FIRMS & ERA5 Meteorological Data" },
+      { label: "ML & Analytics", value: "Python, Scikit-learn, Pandas, NumPy" },
+      { label: "SDG Alignment", value: "SDG 13 (Climate Action) · SDG 15 (Life on Land)" },
     ],
   },
 }
